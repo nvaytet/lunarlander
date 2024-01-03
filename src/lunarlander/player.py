@@ -10,7 +10,8 @@ import pyglet
 
 from . import config
 from .base import Base
-from .game_map import MapView
+
+# from .game_map import MapView
 from .tools import text_to_raw_image
 
 

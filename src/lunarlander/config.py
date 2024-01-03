@@ -65,11 +65,13 @@ class Config:
         self.scoreboard_width = 200
         self.taskbar_height = 60
         self.fps = 15
-        self.resources = ir.files("supremacy") / "resources"
+        # self.resources = ir.files("supremacy") / "resources"
         file = font_manager.findfont("sans")
         self.small_font = ImageFont.truetype(file, size=10)
         self.large_font = ImageFont.truetype(file, size=16)
         self.medium_font = ImageFont.truetype(file, size=12)
+        self.nx = 1920 - self.scoreboard_width
+        self.ny = 1080
 
     def initialize(self, nplayers: int, fullscreen=False):
         dy = self.taskbar_height * (not fullscreen)

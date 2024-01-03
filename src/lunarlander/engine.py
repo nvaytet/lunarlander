@@ -11,7 +11,7 @@ import pyglet
 from . import config
 from .base import BaseProxy
 from .fight import fight
-from .game_map import GameMap, MapView
+from .game_map import GameMap
 from .graphics import Graphics
 from .player import Player
 from .tools import ReadOnly
@@ -21,43 +21,43 @@ from .vehicles import Vehicle, VehicleProxy
 class Engine:
     def __init__(
         self,
-        players: dict,
-        safe=False,
-        high_contrast=False,
-        test=True,
-        time_limit=300,
-        crystal_boost=1,
+        # players: dict,
+        # safe=False,
+        # high_contrast=False,
+        # test=True,
+        # time_limit=300,
+        # crystal_boost=1,
         seed=None,
         fullscreen=False,
     ):
         if seed is not None:
             np.random.seed(seed)
 
-        config.initialize(nplayers=len(players), fullscreen=fullscreen)
+        # config.initialize(nplayers=len(players), fullscreen=fullscreen)
 
         self.nx = config.nx
         self.ny = config.ny
-        self.time_limit = time_limit
-        self.start_time = None
-        self.scores = self.read_scores(players=players, test=test)
-        self.dead_players = []
-        self.high_contrast = high_contrast
-        self.safe = safe
-        self.player_ais = players
-        self.players = {}
-        self.explosions = {}
-        self.crystal_boost = crystal_boost
-        self.paused = False
-        self.previously_paused = False
-        self.pause_time = 0
-        self.exiting = False
-        self.time_of_last_scoreboard_update = 0
+        # self.time_limit = time_limit
+        # self.start_time = None
+        # self.scores = self.read_scores(players=players, test=test)
+        # self.dead_players = []
+        # self.high_contrast = high_contrast
+        # self.safe = safe
+        # self.player_ais = players
+        # self.players = {}
+        # self.explosions = {}
+        # self.crystal_boost = crystal_boost
+        # self.paused = False
+        # self.previously_paused = False
+        # self.pause_time = 0
+        # self.exiting = False
+        # self.time_of_last_scoreboard_update = 0
 
         self.game_map = GameMap(
-            nx=self.nx, ny=self.ny, high_contrast=self.high_contrast
+            # nx=self.nx, ny=self.ny, high_contrast=self.high_contrast
         )
         self.graphics = Graphics(engine=self, fullscreen=fullscreen)
-        self.setup()
+        # self.setup()
 
         pyglet.clock.schedule_interval(self.update, 1 / config.fps)
         pyglet.app.run()
@@ -187,6 +187,7 @@ class Engine:
             p.dump_map()
 
     def update(self, dt: float):
+        return
         if self.exiting:
             if self.graphics.exit_message is None:
                 self.graphics.show_exit_message()
