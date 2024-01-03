@@ -8,7 +8,7 @@ from .engine import Engine
 from . import helpers
 
 
-def start(players, **kwargs):
-    eng = Engine(players, **kwargs)
+def start(*args, **kwargs):
+    eng = Engine(*args, **kwargs)
     eng.finalize()
     return eng

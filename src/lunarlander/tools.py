@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+import hashlib
 from typing import Any, Iterator, Tuple
 
 import numpy as np
@@ -91,3 +92,15 @@ def text_to_image(text, width, height, scale=True, font=None):
         data=img.tobytes(),
         pitch=-img.width * 4,
     )
+
+
+def string_to_color(input_string: str) -> str:
+    hash_object = hashlib.md5(input_string.encode())
+    hex_hash = hash_object.hexdigest()
+    return "#" + hex_hash[:6]
+
+
+def recenter_image(img: pyglet.image.ImageData) -> pyglet.image.ImageData:
+    img.anchor_x = img.width // 2
+    img.anchor_y = img.height // 2
+    return img

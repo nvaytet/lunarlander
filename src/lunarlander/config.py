@@ -65,32 +65,33 @@ class Config:
         self.scoreboard_width = 200
         self.taskbar_height = 60
         self.fps = 15
-        # self.resources = ir.files("supremacy") / "resources"
+        self.resources = ir.files("lunarlander") / "resources"
+        self.avatar_size = (50, 50)
         file = font_manager.findfont("sans")
         self.small_font = ImageFont.truetype(file, size=10)
         self.large_font = ImageFont.truetype(file, size=16)
         self.medium_font = ImageFont.truetype(file, size=12)
-        self.nx = 1920 - self.scoreboard_width
+        self.nx = 1920
         self.ny = 1080
 
-    def initialize(self, nplayers: int, fullscreen=False):
-        dy = self.taskbar_height * (not fullscreen)
-        ref_nx = 1920 - self.scoreboard_width
-        ref_ny = 1080 - dy
-        max_nx = 3840
-        max_ny = 2160
-        area = nplayers * (ref_nx * ref_ny) / 10
-        ratio = ref_nx / ref_ny
-        self.nx = min(max(int(np.sqrt(area * ratio)), ref_nx), max_nx)
-        self.ny = min(max(int(np.sqrt(area / ratio)), ref_ny), max_ny)
+    # def initialize(self, nplayers: int, fullscreen=False):
+    #     dy = self.taskbar_height * (not fullscreen)
+    #     ref_nx = 1920 - self.scoreboard_width
+    #     ref_ny = 1080 - dy
+    #     max_nx = 3840
+    #     max_ny = 2160
+    #     area = nplayers * (ref_nx * ref_ny) / 10
+    #     ratio = ref_nx / ref_ny
+    #     self.nx = min(max(int(np.sqrt(area * ratio)), ref_nx), max_nx)
+    #     self.ny = min(max(int(np.sqrt(area / ratio)), ref_ny), max_ny)
 
-        display = pyglet.canvas.Display()
-        screen = display.get_default_screen()
-        screen_width = screen.width - self.scoreboard_width
-        screen_height = screen.height - dy
-        self.scaling = min(min(screen_width / self.nx, screen_height / self.ny), 1.0)
+    #     display = pyglet.canvas.Display()
+    #     screen = display.get_default_screen()
+    #     screen_width = screen.width - self.scoreboard_width
+    #     screen_height = screen.height - dy
+    #     self.scaling = min(min(screen_width / self.nx, screen_height / self.ny), 1.0)
 
-        self.generate_images(nplayers)
+    #     self.generate_images(nplayers)
 
     def generate_images(self, nplayers: int):
         img = Image.open(self.resources / "explosion.png")

@@ -21,6 +21,7 @@ from .vehicles import Vehicle, VehicleProxy
 class Engine:
     def __init__(
         self,
+        bots,
         # players: dict,
         # safe=False,
         # high_contrast=False,
@@ -56,7 +57,15 @@ class Engine:
         self.game_map = GameMap(
             # nx=self.nx, ny=self.ny, high_contrast=self.high_contrast
         )
-        self.graphics = Graphics(engine=self, fullscreen=fullscreen)
+        self.graphics = Graphics(
+            background_image=self.game_map.background_image, fullscreen=fullscreen
+        )
+
+        self.bots = {bot.team: bot for bot in bots}
+        self.players = {}
+        for name, bot in self.bots.items():
+            self.players[name] = Player(team=name, batch=self.graphics.main_batch)
+
         # self.setup()
 
         pyglet.clock.schedule_interval(self.update, 1 / config.fps)
@@ -187,6 +196,8 @@ class Engine:
             p.dump_map()
 
     def update(self, dt: float):
+        for name, player in self.players.items():
+            player.avatar.x += player.vx * dt
         return
         if self.exiting:
             if self.graphics.exit_message is None:

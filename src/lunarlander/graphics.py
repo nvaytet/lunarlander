@@ -10,18 +10,18 @@ from .tools import text_to_image
 
 
 class Graphics:
-    def __init__(self, engine: Any, fullscreen: bool):
-        self.engine = engine
+    def __init__(self, background_image, fullscreen: bool = False):
+        # self.engine = engine
 
         self.window = pyglet.window.Window(
-            config.nx + config.scoreboard_width,
+            config.nx,
             config.ny,
             caption="Lunar Lander",
             fullscreen=fullscreen,
             resizable=not fullscreen,
         )
 
-        self.background = self.engine.game_map.background_image.get_texture()
+        self.background = background_image.get_texture()
         self.main_batch = pyglet.graphics.Batch()
         # self.time_label = pyglet.sprite.Sprite(
         #     img=text_to_image(

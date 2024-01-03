@@ -4,6 +4,8 @@
 
 # import my_ai
 
+from dataclasses import dataclass
+
 import lunarlander
 
 # names = [
@@ -21,8 +23,16 @@ import lunarlander
 # players = {name: simple_ai for name in names}
 # # players[my_ai.CREATOR] = my_ai
 
+
+@dataclass
+class Bot:
+    team: str
+
+
+bots = [Bot("neil")]
+
 lunarlander.start(
-    players=None,
+    bots=bots,
     # time_limit=8 * 60,  # Time limit in seconds
     # fullscreen=False,  # Set to True for fullscreen
     # seed=None,  # Set seed to always generate the same map
