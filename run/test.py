@@ -33,6 +33,7 @@ bots = [Bot("neil")]
 
 lunarlander.start(
     bots=bots,
+    manual=True,
     # time_limit=8 * 60,  # Time limit in seconds
     # fullscreen=False,  # Set to True for fullscreen
     # seed=None,  # Set seed to always generate the same map

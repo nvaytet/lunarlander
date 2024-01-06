@@ -3,7 +3,7 @@
 import importlib
 import os
 import time
-from typing import Dict
+from typing import Dict, List
 
 import numpy as np
 import pyglet
@@ -23,25 +23,25 @@ def add_key_actions(window, players):
     def on_key_press(symbol, modifiers):
         if symbol == pyglet.window.key.UP:
             for player in players.values():
-                player.thruster_on = True
+                player.main_thruster = True
         elif symbol == pyglet.window.key.LEFT:
             for player in players.values():
-                player._rotate_left = True
+                player.left_thruster = True
         elif symbol == pyglet.window.key.RIGHT:
             for player in players.values():
-                player._rotate_right = True
+                player.right_thruster = True
 
     @window.event
     def on_key_release(symbol, modifiers):
         if symbol == pyglet.window.key.UP:
             for player in players.values():
-                player.thruster_on = False
+                player.main_thruster = False
         elif symbol == pyglet.window.key.LEFT:
             for player in players.values():
-                player._rotate_left = False
+                player.left_thruster = False
         elif symbol == pyglet.window.key.RIGHT:
             for player in players.values():
-                player._rotate_right = False
+                player.right_thruster = False
 
 
 class Engine:
@@ -56,6 +56,7 @@ class Engine:
         # crystal_boost=1,
         seed=None,
         fullscreen=False,
+        manual=False,
     ):
         if seed is not None:
             np.random.seed(seed)
@@ -89,7 +90,7 @@ class Engine:
 
         self.bots = {bot.team: bot for bot in bots}
         self.players = {}
-        for i, (name, bot) in enumerate(self.bots.items()):
+        for i, name in enumerate(self.bots):
             self.players[name] = Player(
                 team=name, number=i, batch=self.graphics.main_batch
             )
@@ -108,7 +109,8 @@ class Engine:
         #         for player in self.players.values():
         #             player.thruster_on = False
 
-        add_key_actions(window=self.graphics.window, players=self.players)
+        if manual:
+            add_key_actions(window=self.graphics.window, players=self.players)
 
         pyglet.clock.schedule_interval(self.update, 1 / config.fps)
         pyglet.app.run()
@@ -236,6 +238,42 @@ class Engine:
         # Dump player maps
         for p in self.players.values():
             p.dump_map()
+
+    def execute_player_bot(self, player, t: float, dt: float):
+        instructions = None
+        args = {
+            "t": t,
+            "dt": dt,
+            "longitude": player.longitude,
+            "latitude": player.latitude,
+            "heading": player.heading,
+            "speed": player.speed,
+            "vector": player.get_vector(),
+            "forecast": self.forecast,
+            "world_map": self.map_proxy,
+        }
+        if self.safe:
+            try:
+                instructions = self.bots[player.team].run(**args)
+            except:  # noqa
+                pass
+        else:
+            instructions = self.bots[player.team].run(**args)
+        return instructions
+
+    def call_player_bots(self, t: float, dt: float, players: List[Player]):
+        for player in players:
+            if self.safe:
+                try:
+                    player.execute_bot_instructions(
+                        self.execute_player_bot(player=player, t=t, dt=dt)
+                    )
+                except:  # noqa
+                    pass
+            else:
+                player.execute_bot_instructions(
+                    self.execute_player_bot(player=player, t=t, dt=dt)
+                )
 
     def move(self, dt: float):
         for player in self.players.values():

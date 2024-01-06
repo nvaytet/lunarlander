@@ -64,9 +64,9 @@ class Config:
         self.fight_radius = 5
         self.scoreboard_width = 200
         self.taskbar_height = 60
-        self.fps = 15
+        self.fps = 30
         self.resources = ir.files("lunarlander") / "resources"
-        self.avatar_size = (30, 30)
+        self.avatar_size = (25, 25)
         file = font_manager.findfont("sans")
         self.small_font = ImageFont.truetype(file, size=10)
         self.large_font = ImageFont.truetype(file, size=16)
@@ -80,7 +80,7 @@ class Config:
         self.rotation_speed = 15.0
         self.max_landing_speed = 5.0
         self.max_landing_angle = 5.0
-        self.max_fuel = 100
+        self.max_fuel = 300
         self.main_engine_burn_rate = 5
         self.rotation_engine_burn_rate = 2
 

@@ -34,7 +34,9 @@ class Player:
         self.score_text = None
         # self.x = 100
         # self.y = config.ny - 100
-        self.thruster_on = False
+        self._main_thruster = False
+        self._left_thruster = False
+        self._right_thruster = False
         self.fuel = config.max_fuel
         self.velocity = np.array([40.0, 0.0])
 
@@ -79,6 +81,72 @@ class Player:
             batch=batch,
         )
 
+        # Main flame
+        flame_img = Image.open(config.resources / f"flame.png")
+        s = 0.75
+        main_flame_img = flame_img.resize(
+            (int(config.avatar_size[0] * s), int(config.avatar_size[1] * s))
+        )
+        imd = pyglet.image.ImageData(
+            width=main_flame_img.width,
+            height=main_flame_img.height,
+            fmt="RGBA",
+            data=main_flame_img.tobytes(),
+            pitch=-main_flame_img.width * 4,
+        )
+        imd.anchor_x = main_flame_img.width // 2
+        imd.anchor_y = config.avatar_size[1]
+        self.main_flame = pyglet.sprite.Sprite(
+            img=imd,
+            x=self.avatar.x,
+            y=self.avatar.y,
+            batch=batch,
+        )
+        self.main_flame.opacity = 0
+
+        # Left flame
+        s = 0.5
+        left_flame_img = flame_img.resize(
+            (int(config.avatar_size[0] * s), int(config.avatar_size[1] * s))
+        ).rotate(-90)
+        imd = pyglet.image.ImageData(
+            width=left_flame_img.width,
+            height=left_flame_img.height,
+            fmt="RGBA",
+            data=left_flame_img.tobytes(),
+            pitch=-left_flame_img.width * 4,
+        )
+        imd.anchor_x = (config.avatar_size[0] // 2) + left_flame_img.width
+        imd.anchor_y = int(0.75 * left_flame_img.height)
+        self.left_flame = pyglet.sprite.Sprite(
+            img=imd,
+            x=self.avatar.x,
+            y=self.avatar.y,
+            batch=batch,
+        )
+        self.left_flame.opacity = 0
+
+        # Right flame
+        right_flame_img = flame_img.resize(
+            (int(config.avatar_size[0] * s), int(config.avatar_size[1] * s))
+        ).rotate(90)
+        imd = pyglet.image.ImageData(
+            width=right_flame_img.width,
+            height=right_flame_img.height,
+            fmt="RGBA",
+            data=right_flame_img.tobytes(),
+            pitch=-right_flame_img.width * 4,
+        )
+        imd.anchor_x = -config.avatar_size[0] // 2
+        imd.anchor_y = int(0.75 * right_flame_img.height)
+        self.right_flame = pyglet.sprite.Sprite(
+            img=imd,
+            x=self.avatar.x,
+            y=self.avatar.y,
+            batch=batch,
+        )
+        self.right_flame.opacity = 0
+
     @property
     def x(self):
         return self.avatar.x
@@ -86,6 +154,9 @@ class Player:
     @x.setter
     def x(self, value):
         self.avatar.x = value
+        self.main_flame.x = value
+        self.left_flame.x = value
+        self.right_flame.x = value
 
     @property
     def y(self):
@@ -94,6 +165,9 @@ class Player:
     @y.setter
     def y(self, value):
         self.avatar.y = value
+        self.main_flame.y = value
+        self.left_flame.y = value
+        self.right_flame.y = value
 
     @property
     def heading(self):
@@ -102,11 +176,41 @@ class Player:
     @heading.setter
     def heading(self, value):
         self.avatar.rotation = -value
+        self.main_flame.rotation = -value
+        self.left_flame.rotation = -value
+        self.right_flame.rotation = -value
+
+    @property
+    def main_thruster(self):
+        return self._main_thruster
+
+    @main_thruster.setter
+    def main_thruster(self, value):
+        self._main_thruster = value
+        self.main_flame.opacity = 255 * value
+
+    @property
+    def left_thruster(self):
+        return self._left_thruster
+
+    @left_thruster.setter
+    def left_thruster(self, value):
+        self._left_thruster = value
+        self.left_flame.opacity = 255 * value
+
+    @property
+    def right_thruster(self):
+        return self._right_thruster
+
+    @right_thruster.setter
+    def right_thruster(self, value):
+        self._right_thruster = value
+        self.right_flame.opacity = 255 * value
 
     def get_thrust(self):
         h = np.radians(self.heading + 90.0)
-        thrust_vector = np.array([np.cos(h), np.sin(h)])
-        return (config.thrust * self.thruster_on * (self.fuel > 0)) * thrust_vector
+        vector = np.array([np.cos(h), np.sin(h)])
+        return (config.thrust * self.main_thruster * (self.fuel > 0)) * vector
 
     def move(self, dt):
         if self.dead:
@@ -120,15 +224,15 @@ class Player:
 
         self.x = self.x % config.nx
 
-        if self._rotate_left and (self.fuel > 0):
+        if self.left_thruster and (self.fuel > 0):
             self.heading += config.rotation_speed * dt
-        if self._rotate_right and (self.fuel > 0):
+        if self.right_thruster and (self.fuel > 0):
             self.heading -= config.rotation_speed * dt
 
         if self.fuel > 0:
-            if self.thruster_on:
+            if self.main_thruster:
                 self.fuel -= config.main_engine_burn_rate * dt
-            if self._rotate_left or self._rotate_right:
+            if self.left_thruster or self.right_thruster:
                 self.fuel -= config.rotation_engine_burn_rate * dt
 
     def crash(self):
