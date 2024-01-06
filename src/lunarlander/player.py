@@ -32,7 +32,10 @@ class Player:
         # self.x = 100
         # self.y = config.ny - 100
         self.thruster_on = False
-        self.velocity = np.array([10.0, 0.0])
+        self.velocity = np.array([20.0, 0.0])
+
+        self._rotate_left = False
+        self._rotate_right = False
         # self._ay = 0
         # self.vx0 = 10
         # self.vy0 = 0
@@ -41,6 +44,7 @@ class Player:
         print(self.color)
         self.make_avatar(batch=batch)
         self.heading = 0
+        self.dead = False
 
     def make_avatar(self, batch):
         img = Image.open(config.resources / f"lem.png")
@@ -89,19 +93,57 @@ class Player:
     def heading(self, value):
         self.avatar.rotation = -value
 
-    @property
-    def thrust(self):
+    def get_thrust(self):
         h = np.radians(self.heading + 90.0)
         thrust_vector = np.array([np.cos(h), np.sin(h)])
         return (config.thrust * self.thruster_on) * thrust_vector
 
     def move(self, dt):
-        acceleration = config.gravity + self.thrust
+        if self.dead:
+            return
+        acceleration = config.gravity + self.get_thrust()
 
         self.velocity += acceleration * dt
 
         self.x += self.velocity[0] * dt
         self.y += self.velocity[1] * dt
+
+        self.x = self.x % config.nx
+
+        if self._rotate_left:
+            self.heading += config.rotation_speed * dt
+        if self._rotate_right:
+            self.heading -= config.rotation_speed * dt
+
+    def crash(self):
+        self.dead = True
+        x, y = self.x, self.y
+        img = Image.open(config.resources / f"skull.png")
+        img = img.resize(config.avatar_size).convert("RGBA")
+        data = img.getdata()
+        array = np.array(data).reshape(img.height, img.width, 4)
+        rgb = hex2color(self.color)
+        for i in range(3):
+            array[..., i] = int(round(rgb[i] * 255))
+
+        imd = pyglet.image.ImageData(
+            width=img.width,
+            height=img.height,
+            fmt="RGBA",
+            data=Image.fromarray(array.astype(np.uint8)).tobytes(),
+            pitch=-img.width * 4,
+        )
+        batch = self.avatar.batch
+        self.avatar.delete()
+        self.avatar = pyglet.sprite.Sprite(
+            img=recenter_image(imd),
+            x=x,
+            y=y,
+            batch=batch,
+        )
+
+    def land(self):
+        self.dead = True
 
         # # Update vertical velocity based on vertical acceleration
         # self.vertical_velocity += self.vertical_acceleration * time_step

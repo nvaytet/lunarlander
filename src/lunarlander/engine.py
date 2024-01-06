@@ -18,6 +18,32 @@ from .tools import ReadOnly
 from .vehicles import Vehicle, VehicleProxy
 
 
+def add_key_actions(window, players):
+    @window.event
+    def on_key_press(symbol, modifiers):
+        if symbol == pyglet.window.key.UP:
+            for player in players.values():
+                player.thruster_on = True
+        elif symbol == pyglet.window.key.LEFT:
+            for player in players.values():
+                player._rotate_left = True
+        elif symbol == pyglet.window.key.RIGHT:
+            for player in players.values():
+                player._rotate_right = True
+
+    @window.event
+    def on_key_release(symbol, modifiers):
+        if symbol == pyglet.window.key.UP:
+            for player in players.values():
+                player.thruster_on = False
+        elif symbol == pyglet.window.key.LEFT:
+            for player in players.values():
+                player._rotate_left = False
+        elif symbol == pyglet.window.key.RIGHT:
+            for player in players.values():
+                player._rotate_right = False
+
+
 class Engine:
     def __init__(
         self,
@@ -68,17 +94,19 @@ class Engine:
 
         # self.setup()
 
-        @self.graphics.window.event
-        def on_key_press(symbol, modifiers):
-            if symbol == pyglet.window.key.P:
-                for player in self.players.values():
-                    player.thruster_on = True
+        # @self.graphics.window.event
+        # def on_key_press(symbol, modifiers):
+        #     if symbol == pyglet.window.key.P:
+        #         for player in self.players.values():
+        #             player.thruster_on = True
 
-        @self.graphics.window.event
-        def on_key_press(symbol, modifiers):
-            if symbol == pyglet.window.key.P:
-                for player in self.players.values():
-                    player.thruster_on = False
+        # @self.graphics.window.event
+        # def on_key_release(symbol, modifiers):
+        #     if symbol == pyglet.window.key.P:
+        #         for player in self.players.values():
+        #             player.thruster_on = False
+
+        add_key_actions(window=self.graphics.window, players=self.players)
 
         pyglet.clock.schedule_interval(self.update, 1 / config.fps)
         pyglet.app.run()
@@ -126,10 +154,10 @@ class Engine:
         print("Scores:", scores)
         return scores
 
-    def move(self, vehicle: Vehicle, dt: float):
-        x, y = vehicle.next_position(dt=dt)
-        map_value = self.game_map.array[int(y), int(x)]
-        vehicle.move(x, y, map_value=map_value)
+    # def move(self, vehicle: Vehicle, dt: float):
+    #     x, y = vehicle.next_position(dt=dt)
+    #     map_value = self.game_map.array[int(y), int(x)]
+    #     vehicle.move(x, y, map_value=map_value)
 
     def generate_info(self, player: Player):
         info = {}
@@ -209,11 +237,36 @@ class Engine:
 
     def move(self, dt: float):
         for player in self.players.values():
-            player.x += player.vx * dt
+            player.move(dt=dt * 4)
+
+    def check_landing(self):
+        for player in self.players.values():
+            if not player.dead:
+                pixels = self.game_map.array[
+                    int(player.y - config.avatar_size[1] / 2),
+                    int(player.x - config.avatar_size[0] / 2) : int(
+                        player.x + config.avatar_size[0] / 2
+                    ),
+                ]
+                if any(pixels == 1):
+                    print("speed", np.linalg.norm(player.velocity))
+                    print("angle", player.heading)
+                    if (
+                        any(pixels == 0)
+                        or (np.linalg.norm(player.velocity) > config.max_landing_speed)
+                        or (
+                            np.abs(((player.heading + 180) % 360) - 180)
+                            > config.max_landing_angle
+                        )
+                    ):
+                        player.crash()
+                    else:
+                        player.land()
 
     def update(self, dt: float):
-        for player in self.players.values():
-            player.move(dt=dt)
+        self.move(dt=dt)
+        self.check_landing()
+
         return
         if self.exiting:
             if self.graphics.exit_message is None:

@@ -33,15 +33,15 @@ class GameMap:
         sizes = np.random.randint(10, 100, size=nsites)
         locs = np.random.randint(0, config.nx - 1, size=nsites)
 
-        final = smooth.copy()
+        self.terrain = smooth.copy()
 
         for i in range(nsites):
             w = sizes[i] // 2
             l = locs[i]
-            final[l - w : l + w] = smooth[l - w]
+            self.terrain[l - w : l + w] = smooth[l - w]
 
         y = np.arange(config.ny).reshape(config.ny, 1)
-        sel = y < final
+        sel = y < self.terrain
         self.array[sel] = 1
 
         to_image = np.flipud(self.array * 255)

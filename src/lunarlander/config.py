@@ -73,9 +73,13 @@ class Config:
         self.medium_font = ImageFont.truetype(file, size=12)
         self.nx = 1920
         self.ny = 1080
-        self.gravity = np.array([0, -1.62])  # m/s^2
+        # self.gravity = np.array([0, -1.62])  # m/s^2
+        self.gravity = np.array([0, -1.0])  # m/s^2
         self.lem_mass = 15_000  # kg
-        self.thrust = 5  # N
+        self.thrust = np.abs(self.gravity[1]) * 3  # N
+        self.rotation_speed = 15.0
+        self.max_landing_speed = 5.0
+        self.max_landing_angle = 5.0
 
     # def initialize(self, nplayers: int, fullscreen=False):
     #     dy = self.taskbar_height * (not fullscreen)
