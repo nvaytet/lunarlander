@@ -14,7 +14,7 @@ class Graphics:
         # self.engine = engine
 
         self.window = pyglet.window.Window(
-            config.nx,
+            config.nx + config.scoreboard_width,
             config.ny,
             caption="Lunar Lander",
             fullscreen=fullscreen,
@@ -23,15 +23,15 @@ class Graphics:
 
         self.background = background_image.get_texture()
         self.main_batch = pyglet.graphics.Batch()
-        # self.time_label = pyglet.sprite.Sprite(
-        #     img=text_to_image(
-        #         "Time left:", width=100, height=24, scale=False, font=config.medium_font
-        #     ),
-        #     x=(config.nx * config.scaling) + 20,
-        #     y=(config.ny * config.scaling) - 30,
-        #     batch=self.main_batch,
-        # )
-        # self.time_left = None
+        self.time_label = pyglet.sprite.Sprite(
+            img=text_to_image(
+                "Time left:", width=100, height=24, scale=False, font=config.medium_font
+            ),
+            x=config.nx + 20,
+            y=config.ny - 30,
+            batch=self.main_batch,
+        )
+        self.time_left = None
         # self.exit_message = None
 
         # self.scoreboard_labels = []
@@ -47,18 +47,18 @@ class Graphics:
         #     if symbol == pyglet.window.key.P:
         #         self.engine.paused = not self.engine.paused
 
-    # def update_scoreboard(self, t: float):
-    #     if self.time_left is not None:
-    #         self.time_left.delete()
-    #     t_str = str(datetime.timedelta(seconds=int(t)))[2:]
-    #     self.time_left = pyglet.sprite.Sprite(
-    #         img=text_to_image(
-    #             t_str, width=100, height=24, scale=False, font=config.medium_font
-    #         ),
-    #         x=self.time_label.x + 60,
-    #         y=self.time_label.y,
-    #         batch=self.main_batch,
-    #     )
+    def update_scoreboard(self, t: float):
+        if self.time_left is not None:
+            self.time_left.delete()
+        t_str = str(datetime.timedelta(seconds=int(t)))[2:]
+        self.time_left = pyglet.sprite.Sprite(
+            img=text_to_image(
+                t_str, width=100, height=24, scale=False, font=config.medium_font
+            ),
+            x=self.time_label.x + 60,
+            y=self.time_label.y,
+            batch=self.main_batch,
+        )
 
     # def show_exit_message(self):
     #     self.exit_message = pyglet.text.Label(

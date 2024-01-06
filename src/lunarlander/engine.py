@@ -64,8 +64,8 @@ class Engine:
 
         self.nx = config.nx
         self.ny = config.ny
-        # self.time_limit = time_limit
-        # self.start_time = None
+        self.time_limit = 100
+        self.start_time = None
         # self.scores = self.read_scores(players=players, test=test)
         # self.dead_players = []
         # self.high_contrast = high_contrast
@@ -78,7 +78,7 @@ class Engine:
         # self.previously_paused = False
         # self.pause_time = 0
         # self.exiting = False
-        # self.time_of_last_scoreboard_update = 0
+        self.time_of_last_scoreboard_update = 0
 
         self.game_map = GameMap(
             # nx=self.nx, ny=self.ny, high_contrast=self.high_contrast
@@ -89,8 +89,10 @@ class Engine:
 
         self.bots = {bot.team: bot for bot in bots}
         self.players = {}
-        for name, bot in self.bots.items():
-            self.players[name] = Player(team=name, batch=self.graphics.main_batch)
+        for i, (name, bot) in enumerate(self.bots.items()):
+            self.players[name] = Player(
+                team=name, number=i, batch=self.graphics.main_batch
+            )
 
         # self.setup()
 
@@ -237,7 +239,7 @@ class Engine:
 
     def move(self, dt: float):
         for player in self.players.values():
-            player.move(dt=dt * 4)
+            player.move(dt=dt * 2)
 
     def check_landing(self):
         for player in self.players.values():
@@ -264,6 +266,14 @@ class Engine:
                         player.land()
 
     def update(self, dt: float):
+        if self.start_time is None:
+            self.start_time = time.time()
+        t = time.time() - self.start_time
+        if abs(t - self.time_of_last_scoreboard_update) > 0.3:
+            self.time_of_last_scoreboard_update = t
+            self.graphics.update_scoreboard(t=t)
+            for player in self.players.values():
+                player.update_scoreboard(batch=self.graphics.main_batch)
         self.move(dt=dt)
         self.check_landing()
 

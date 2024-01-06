@@ -71,7 +71,7 @@ class Config:
         self.small_font = ImageFont.truetype(file, size=10)
         self.large_font = ImageFont.truetype(file, size=16)
         self.medium_font = ImageFont.truetype(file, size=12)
-        self.nx = 1920
+        self.nx = 1920 - self.scoreboard_width
         self.ny = 1080
         # self.gravity = np.array([0, -1.62])  # m/s^2
         self.gravity = np.array([0, -1.0])  # m/s^2
@@ -80,6 +80,9 @@ class Config:
         self.rotation_speed = 15.0
         self.max_landing_speed = 5.0
         self.max_landing_angle = 5.0
+        self.max_fuel = 100
+        self.main_engine_burn_rate = 5
+        self.rotation_engine_burn_rate = 2
 
     # def initialize(self, nplayers: int, fullscreen=False):
     #     dy = self.taskbar_height * (not fullscreen)

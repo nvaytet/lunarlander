@@ -21,7 +21,7 @@ class Player:
         self,
         # ai: Any,
         # location: Tuple[int, int],
-        # number: int,
+        number: int,
         team: str,
         batch: Any,
         # game_map: np.ndarray,
@@ -29,10 +29,14 @@ class Player:
         # base_locations: np.ndarray,
         # high_contrast: bool = False,
     ):
+        self.team = team
+        self.number = number
+        self.score_text = None
         # self.x = 100
         # self.y = config.ny - 100
         self.thruster_on = False
-        self.velocity = np.array([20.0, 0.0])
+        self.fuel = config.max_fuel
+        self.velocity = np.array([40.0, 0.0])
 
         self._rotate_left = False
         self._rotate_right = False
@@ -68,6 +72,12 @@ class Player:
             y=config.ny - 100,
             batch=batch,
         )
+        self.score_avatar = pyglet.sprite.Sprite(
+            img=recenter_image(imd),
+            x=config.nx + 30,
+            y=config.ny - 100 - 35 * self.number,
+            batch=batch,
+        )
 
     @property
     def x(self):
@@ -96,7 +106,7 @@ class Player:
     def get_thrust(self):
         h = np.radians(self.heading + 90.0)
         thrust_vector = np.array([np.cos(h), np.sin(h)])
-        return (config.thrust * self.thruster_on) * thrust_vector
+        return (config.thrust * self.thruster_on * (self.fuel > 0)) * thrust_vector
 
     def move(self, dt):
         if self.dead:
@@ -110,10 +120,16 @@ class Player:
 
         self.x = self.x % config.nx
 
-        if self._rotate_left:
+        if self._rotate_left and (self.fuel > 0):
             self.heading += config.rotation_speed * dt
-        if self._rotate_right:
+        if self._rotate_right and (self.fuel > 0):
             self.heading -= config.rotation_speed * dt
+
+        if self.fuel > 0:
+            if self.thruster_on:
+                self.fuel -= config.main_engine_burn_rate * dt
+            if self._rotate_left or self._rotate_right:
+                self.fuel -= config.rotation_engine_burn_rate * dt
 
     def crash(self):
         self.dead = True
@@ -257,37 +273,52 @@ class Player:
     #     self.score_this_round += score
     #     self.global_score += score
 
-    # def make_avatar(self, ind):
-    #     self.score_position = ind
-    #     img = Image.new("RGBA", (200, 24), (0, 0, 0, 0))
-    #     img.paste(self.avatar_base_image, (0, 0))
-    #     img.paste(
-    #         text_to_raw_image(
-    #             f"  {'  ' if self.score_position < 9 else ''}"
-    #             f"{self.score_position + 1}.   "
-    #             f"{self.global_score}[{self.score_this_round}]",
-    #             width=100,
-    #             height=24,
-    #             font=config.medium_font,
-    #         ),
-    #         (100, 0),
-    #     )
+    def update_scoreboard(self, batch):
+        # self.score_position = ind
+        img = Image.new("RGBA", (150, 44), (0, 0, 0, 0))
+        img.paste(
+            text_to_raw_image(
+                f"{self.team}: fuel={max(self.fuel, 0):.1f}",
+                width=150,
+                height=24,
+                font=config.medium_font,
+            ),
+            (0, 0),
+        )
+        img.paste(
+            text_to_raw_image(
+                f"v=[{self.velocity[0]:.1f}, {self.velocity[1]:.1f}]",
+                width=150,
+                height=24,
+                font=config.medium_font,
+            ),
+            (0, 14),
+        )
+        img.paste(
+            text_to_raw_image(
+                f"angle={self.heading:.1f}",
+                width=150,
+                height=24,
+                font=config.medium_font,
+            ),
+            (0, 28),
+        )
 
-    #     imd = pyglet.image.ImageData(
-    #         width=img.width,
-    #         height=img.height,
-    #         fmt="RGBA",
-    #         data=img.tobytes(),
-    #         pitch=-img.width * 4,
-    #     )
-    #     if self.avatar is not None:
-    #         self.avatar.delete()
-    #     self.avatar = pyglet.sprite.Sprite(
-    #         img=imd,
-    #         x=(config.nx * config.scaling) + 4,
-    #         y=(config.ny * config.scaling) - 100 - 35 * self.score_position,
-    #         batch=self.batch,
-    #     )
+        imd = pyglet.image.ImageData(
+            width=img.width,
+            height=img.height,
+            fmt="RGBA",
+            data=img.tobytes(),
+            pitch=-img.width * 4,
+        )
+        if self.score_text is not None:
+            self.score_text.delete()
+        self.score_text = pyglet.sprite.Sprite(
+            img=imd,
+            x=config.nx + 60,
+            y=config.ny - 120 - 35 * self.number,
+            batch=batch,
+        )
 
     # def rip(self):
     #     for v in self.vehicles:
