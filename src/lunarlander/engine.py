@@ -67,6 +67,7 @@ class Engine:
         self.ny = config.ny
         self.time_limit = 100
         self.start_time = None
+        self._manual = manual
         # self.scores = self.read_scores(players=players, test=test)
         # self.dead_players = []
         # self.high_contrast = high_contrast
@@ -109,7 +110,7 @@ class Engine:
         #         for player in self.players.values():
         #             player.thruster_on = False
 
-        if manual:
+        if self._manual:
             add_key_actions(window=self.graphics.window, players=self.players)
 
         pyglet.clock.schedule_interval(self.update, 1 / config.fps)
@@ -244,13 +245,12 @@ class Engine:
         args = {
             "t": t,
             "dt": dt,
-            "longitude": player.longitude,
-            "latitude": player.latitude,
+            "x": player.x,
+            "y": player.y,
             "heading": player.heading,
-            "speed": player.speed,
-            "vector": player.get_vector(),
-            "forecast": self.forecast,
-            "world_map": self.map_proxy,
+            "vx": player.velocity[0],
+            "vy": player.velocity[1],
+            "fuel": player.fuel,
         }
         if self.safe:
             try:

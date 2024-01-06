@@ -11,6 +11,7 @@ import pyglet
 
 from . import config
 from .base import Base
+from .core import Instructions
 
 # from .game_map import MapView
 from .tools import recenter_image, string_to_color, text_to_raw_image
@@ -264,6 +265,11 @@ class Player:
 
     def land(self):
         self.dead = True
+
+    def execute_bot_instructions(self, instructions: Instructions):
+        self.main_thruster = instructions.main
+        self.left_thruster = instructions.left
+        self.right_thruster = instructions.right
 
         # # Update vertical velocity based on vertical acceleration
         # self.vertical_velocity += self.vertical_acceleration * time_step
