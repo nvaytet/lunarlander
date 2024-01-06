@@ -29,14 +29,18 @@ class Player:
         # base_locations: np.ndarray,
         # high_contrast: bool = False,
     ):
-        self.x = 100
-        self.y = config.ny - 100
-        self.vx = 10
-        self.vy = 0
+        # self.x = 100
+        # self.y = config.ny - 100
+        self.thruster_on = False
+        self.velocity = np.array([10.0, 0.0])
+        # self._ay = 0
+        # self.vx0 = 10
+        # self.vy0 = 0
         print(team)
         self.color = string_to_color(team)
         print(self.color)
         self.make_avatar(batch=batch)
+        self.heading = 0
 
     def make_avatar(self, batch):
         img = Image.open(config.resources / f"lem.png")
@@ -56,10 +60,63 @@ class Player:
         )
         self.avatar = pyglet.sprite.Sprite(
             img=recenter_image(imd),
-            x=self.x,
-            y=self.y,
+            x=100,
+            y=config.ny - 100,
             batch=batch,
         )
+
+    @property
+    def x(self):
+        return self.avatar.x
+
+    @x.setter
+    def x(self, value):
+        self.avatar.x = value
+
+    @property
+    def y(self):
+        return self.avatar.y
+
+    @y.setter
+    def y(self, value):
+        self.avatar.y = value
+
+    @property
+    def heading(self):
+        return -self.avatar.rotation
+
+    @heading.setter
+    def heading(self, value):
+        self.avatar.rotation = -value
+
+    @property
+    def thrust(self):
+        h = np.radians(self.heading + 90.0)
+        thrust_vector = np.array([np.cos(h), np.sin(h)])
+        return (config.thrust * self.thruster_on) * thrust_vector
+
+    def move(self, dt):
+        acceleration = config.gravity + self.thrust
+
+        self.velocity += acceleration * dt
+
+        self.x += self.velocity[0] * dt
+        self.y += self.velocity[1] * dt
+
+        # # Update vertical velocity based on vertical acceleration
+        # self.vertical_velocity += self.vertical_acceleration * time_step
+
+        # # Apply terminal velocity in the downward direction
+        # if self.vertical_velocity > self.max_vertical_speed:
+        #     self.vertical_velocity = self.max_vertical_speed
+
+        # # Update horizontal velocity based on horizontal acceleration
+        # self.horizontal_velocity += self.horizontal_acceleration * time_step
+
+        # # Update position based on velocities
+        # # (adjust for your game's needs)
+        # self.position_x += self.horizontal_velocity * time_step
+        # self.position_y += self.vertical_velocity * time_step
 
     # def update_player_map(self, x: float, y: float):
     #     r = config.view_radius

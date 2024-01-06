@@ -42,10 +42,10 @@ class Graphics:
             self.background.blit(0, 0)
             self.main_batch.draw()
 
-    #     # @self.window.event
-    #     # def on_key_release(symbol, modifiers):
-    #     #     if symbol == pyglet.window.key.P:
-    #     #         self.engine.paused = not self.engine.paused
+        # @self.window.event
+        # def on_key_press(symbol, modifiers):
+        #     if symbol == pyglet.window.key.P:
+        #         self.engine.paused = not self.engine.paused
 
     # def update_scoreboard(self, t: float):
     #     if self.time_left is not None:

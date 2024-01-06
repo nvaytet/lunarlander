@@ -68,6 +68,18 @@ class Engine:
 
         # self.setup()
 
+        @self.graphics.window.event
+        def on_key_press(symbol, modifiers):
+            if symbol == pyglet.window.key.P:
+                for player in self.players.values():
+                    player.thruster_on = True
+
+        @self.graphics.window.event
+        def on_key_press(symbol, modifiers):
+            if symbol == pyglet.window.key.P:
+                for player in self.players.values():
+                    player.thruster_on = False
+
         pyglet.clock.schedule_interval(self.update, 1 / config.fps)
         pyglet.app.run()
 
@@ -195,9 +207,13 @@ class Engine:
         for p in self.players.values():
             p.dump_map()
 
+    def move(self, dt: float):
+        for player in self.players.values():
+            player.x += player.vx * dt
+
     def update(self, dt: float):
-        for name, player in self.players.items():
-            player.avatar.x += player.vx * dt
+        for player in self.players.values():
+            player.move(dt=dt)
         return
         if self.exiting:
             if self.graphics.exit_message is None:

@@ -66,13 +66,16 @@ class Config:
         self.taskbar_height = 60
         self.fps = 15
         self.resources = ir.files("lunarlander") / "resources"
-        self.avatar_size = (50, 50)
+        self.avatar_size = (30, 30)
         file = font_manager.findfont("sans")
         self.small_font = ImageFont.truetype(file, size=10)
         self.large_font = ImageFont.truetype(file, size=16)
         self.medium_font = ImageFont.truetype(file, size=12)
         self.nx = 1920
         self.ny = 1080
+        self.gravity = np.array([0, -1.62])  # m/s^2
+        self.lem_mass = 15_000  # kg
+        self.thrust = 5  # N
 
     # def initialize(self, nplayers: int, fullscreen=False):
     #     dy = self.taskbar_height * (not fullscreen)
