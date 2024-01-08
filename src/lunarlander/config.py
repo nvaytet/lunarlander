@@ -80,9 +80,10 @@ class Config:
         self.rotation_speed = 15.0
         self.max_landing_speed = 5.0
         self.max_landing_angle = 5.0
-        self.max_fuel = 300
+        self.max_fuel = 3000
         self.main_engine_burn_rate = 5
         self.rotation_engine_burn_rate = 2
+        self.asteroid_delay = 5.0
 
     # def initialize(self, nplayers: int, fullscreen=False):
     #     dy = self.taskbar_height * (not fullscreen)

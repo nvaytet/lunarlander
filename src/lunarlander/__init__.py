@@ -8,7 +8,7 @@ from .engine import Engine
 from . import helpers
 
 
-def start(*args, **kwargs):
+def play(*args, **kwargs):
     eng = Engine(*args, **kwargs)
-    eng.finalize()
+    # eng.finalize()
     return eng

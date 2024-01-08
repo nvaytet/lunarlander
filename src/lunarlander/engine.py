@@ -9,6 +9,7 @@ import numpy as np
 import pyglet
 
 from . import config
+from .asteroid import Asteroid
 from .base import BaseProxy
 from .fight import fight
 from .game_map import GameMap
@@ -23,13 +24,16 @@ def add_key_actions(window, players):
     def on_key_press(symbol, modifiers):
         if symbol == pyglet.window.key.UP:
             for player in players.values():
-                player.main_thruster = True
+                if player.fuel > 0:
+                    player.main_thruster = True
         elif symbol == pyglet.window.key.LEFT:
             for player in players.values():
-                player.left_thruster = True
+                if player.fuel > 0:
+                    player.left_thruster = True
         elif symbol == pyglet.window.key.RIGHT:
             for player in players.values():
-                player.right_thruster = True
+                if player.fuel > 0:
+                    player.right_thruster = True
 
     @window.event
     def on_key_release(symbol, modifiers):
@@ -57,6 +61,7 @@ class Engine:
         seed=None,
         fullscreen=False,
         manual=False,
+        asteroids=True,
     ):
         if seed is not None:
             np.random.seed(seed)
@@ -68,6 +73,8 @@ class Engine:
         self.time_limit = 100
         self.start_time = None
         self._manual = manual
+        self._asteroids = asteroids
+        self.meteors = []
         # self.scores = self.read_scores(players=players, test=test)
         # self.dead_players = []
         # self.high_contrast = high_contrast
@@ -81,13 +88,12 @@ class Engine:
         # self.pause_time = 0
         # self.exiting = False
         self.time_of_last_scoreboard_update = 0
+        self.time_of_last_asteroid = 0
 
         self.game_map = GameMap(
             # nx=self.nx, ny=self.ny, high_contrast=self.high_contrast
         )
-        self.graphics = Graphics(
-            background_image=self.game_map.background_image, fullscreen=fullscreen
-        )
+        self.graphics = Graphics(game_map=self.game_map, fullscreen=fullscreen)
 
         self.bots = {bot.team: bot for bot in bots}
         self.players = {}
@@ -281,7 +287,7 @@ class Engine:
 
     def check_landing(self):
         for player in self.players.values():
-            if not player.dead:
+            if (not player.dead) and (player.y < config.ny - 1):
                 pixels = self.game_map.array[
                     int(player.y - config.avatar_size[1] / 2),
                     int(player.x - config.avatar_size[0] / 2) : int(
@@ -303,6 +309,37 @@ class Engine:
                     else:
                         player.land()
 
+    def update_asteroids(self, t, dt):
+        if (t - self.time_of_last_asteroid) > config.asteroid_delay:
+            self.meteors.append(
+                Asteroid(
+                    x=np.random.uniform(0, config.nx),
+                    y=config.ny + 100,
+                    v=np.random.uniform(100, 200),
+                    heading=np.random.uniform(-25, -155),
+                    size=np.random.uniform(32, 128),
+                    batch=self.graphics.main_batch,
+                )
+            )
+            self.time_of_last_asteroid = t
+        for meteor in self.meteors:
+            meteor.move(dt=dt)
+            tip = meteor.tip()
+            tip_size = meteor.size * 0.2
+            for player in self.players.values():
+                if not player.dead:
+                    d = np.sqrt((player.x - tip[0]) ** 2 + (player.y - tip[1]) ** 2)
+                    if d < tip_size:
+                        player.crash()
+            if tip[1] <= self.game_map.terrain[int(tip[0])]:
+                self.game_map.make_crater(
+                    x=int(tip[0]),
+                    y=int(tip[1]),
+                    radius=int(tip_size),
+                )
+                meteor.avatar.delete()
+                self.meteors.remove(meteor)
+
     def update(self, dt: float):
         if self.start_time is None:
             self.start_time = time.time()
@@ -314,6 +351,8 @@ class Engine:
                 player.update_scoreboard(batch=self.graphics.main_batch)
         self.move(dt=dt)
         self.check_landing()
+        if self._asteroids:
+            self.update_asteroids(t, dt)
 
         return
         if self.exiting:

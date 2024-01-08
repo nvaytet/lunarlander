@@ -50,7 +50,7 @@ class Player:
         self.color = string_to_color(team)
         print(self.color)
         self.make_avatar(batch=batch)
-        self.heading = 0
+        self.heading = 90
         self.dead = False
 
     def make_avatar(self, batch):
@@ -176,6 +176,7 @@ class Player:
 
     @heading.setter
     def heading(self, value):
+        value = value % 360
         self.avatar.rotation = -value
         self.main_flame.rotation = -value
         self.left_flame.rotation = -value

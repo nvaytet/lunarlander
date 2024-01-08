@@ -10,7 +10,7 @@ from .tools import text_to_image
 
 
 class Graphics:
-    def __init__(self, background_image, fullscreen: bool = False):
+    def __init__(self, game_map, fullscreen: bool = False):
         # self.engine = engine
 
         self.window = pyglet.window.Window(
@@ -21,7 +21,9 @@ class Graphics:
             resizable=not fullscreen,
         )
 
-        self.background = background_image.get_texture()
+        self.game_map = game_map
+
+        # self.background = background_image.get_texture()
         self.main_batch = pyglet.graphics.Batch()
         self.time_label = pyglet.sprite.Sprite(
             img=text_to_image(
@@ -39,7 +41,8 @@ class Graphics:
         @self.window.event
         def on_draw():
             self.window.clear()
-            self.background.blit(0, 0)
+            self.game_map.background_image.get_texture().blit(0, 0)
+            # self.background.blit(0, 0)
             self.main_batch.draw()
 
         # @self.window.event
