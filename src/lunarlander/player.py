@@ -237,7 +237,7 @@ class Player:
             if self.left_thruster or self.right_thruster:
                 self.fuel -= config.rotation_engine_burn_rate * dt
 
-    def crash(self):
+    def crash(self, reason):
         self.dead = True
         x, y = self.x, self.y
         img = Image.open(config.resources / f"skull.png")
@@ -263,6 +263,7 @@ class Player:
             y=y,
             batch=batch,
         )
+        print(f"Player {self.team} crashed! Reason: {reason}.")
 
     def land(self):
         self.dead = True

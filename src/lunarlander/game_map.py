@@ -60,8 +60,9 @@ class GameMap:
 
         self.background_image = self.terrain_to_image()
 
-    def make_crater(self, x: int, y: int, radius: int):
-        self.terrain[x - radius : x + radius] = float(self.terrain[x])
+    def make_crater(self, x: int):
+        r = config.crater_radius
+        self.terrain[x - r : x + r] = float(self.terrain[x])
         self.background_image = self.terrain_to_image()
 
     def terrain_to_image(self):

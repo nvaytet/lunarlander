@@ -54,16 +54,7 @@ def _make_colors(num_colors: int) -> List[Tuple[float, ...]]:
 
 class Config:
     def __init__(self):
-        self.speed = {"tank": 10, "ship": 5, "jet": 20, "base": 0}
-        self.health = {"tank": 50, "ship": 200, "jet": 50, "base": 100, "mine": 50}
-        self.attack = {"tank": 20, "ship": 10, "jet": 30, "base": 0, "mine": 0}
-        self.cost = {"tank": 500, "ship": 2000, "jet": 4000, "mine": 1000}
-        self.view_radius = 20
-        self.vehicle_offset = 5
-        self.competing_mine_radius = 40
-        self.fight_radius = 5
         self.scoreboard_width = 200
-        self.taskbar_height = 60
         self.fps = 30
         self.resources = ir.files("lunarlander") / "resources"
         self.avatar_size = (25, 25)
@@ -74,6 +65,7 @@ class Config:
         self.nx = 1920 - self.scoreboard_width
         self.ny = 1080
         # self.gravity = np.array([0, -1.62])  # m/s^2
+        self.time_limit = 60 * 5
         self.gravity = np.array([0, -1.0])  # m/s^2
         self.lem_mass = 15_000  # kg
         self.thrust = np.abs(self.gravity[1]) * 3  # N
@@ -84,6 +76,7 @@ class Config:
         self.main_engine_burn_rate = 5
         self.rotation_engine_burn_rate = 2
         self.asteroid_delay = 5.0
+        self.crater_radius = self.avatar_size[0] // 2 + 1
 
     # def initialize(self, nplayers: int, fullscreen=False):
     #     dy = self.taskbar_height * (not fullscreen)

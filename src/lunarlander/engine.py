@@ -297,27 +297,35 @@ class Engine:
                 if any(pixels == 1):
                     print("speed", np.linalg.norm(player.velocity))
                     print("angle", player.heading)
-                    if (
-                        any(pixels == 0)
-                        or (np.linalg.norm(player.velocity) > config.max_landing_speed)
-                        or (
-                            np.abs(((player.heading + 180) % 360) - 180)
-                            > config.max_landing_angle
-                        )
-                    ):
-                        player.crash()
+                    uneven_terrain = any(pixels == 0)
+                    too_fast = (
+                        np.linalg.norm(player.velocity) > config.max_landing_speed
+                    )
+                    landing_angle = np.abs(((player.heading + 180) % 360) - 180)
+                    bad_angle = landing_angle > config.max_landing_angle
+                    if uneven_terrain or too_fast or bad_angle:
+                        reason = []
+                        if uneven_terrain:
+                            reason.append("uneven terrain")
+                        if too_fast:
+                            reason.append(f"velocity={player.velocity}")
+                        if bad_angle:
+                            reason.append(f"landing angle={landing_angle}")
+                        player.crash(reason=", ".join(reason))
                     else:
                         player.land()
+                        print(f"Player {player.team} landed!")
 
     def update_asteroids(self, t, dt):
-        if (t - self.time_of_last_asteroid) > config.asteroid_delay:
+        delay = (1.0 - 5.0) / config.time_limit * t + 5.0
+        if (t - self.time_of_last_asteroid) > delay:
             self.meteors.append(
                 Asteroid(
                     x=np.random.uniform(0, config.nx),
                     y=config.ny + 100,
                     v=np.random.uniform(100, 200),
                     heading=np.random.uniform(-25, -155),
-                    size=np.random.uniform(32, 128),
+                    size=72,
                     batch=self.graphics.main_batch,
                 )
             )
@@ -330,13 +338,9 @@ class Engine:
                 if not player.dead:
                     d = np.sqrt((player.x - tip[0]) ** 2 + (player.y - tip[1]) ** 2)
                     if d < tip_size:
-                        player.crash()
+                        player.crash(reason="asteroid collision")
             if tip[1] <= self.game_map.terrain[int(tip[0])]:
-                self.game_map.make_crater(
-                    x=int(tip[0]),
-                    y=int(tip[1]),
-                    radius=int(tip_size),
-                )
+                self.game_map.make_crater(x=int(tip[0]))
                 meteor.avatar.delete()
                 self.meteors.remove(meteor)
 
@@ -346,7 +350,7 @@ class Engine:
         t = time.time() - self.start_time
         if abs(t - self.time_of_last_scoreboard_update) > 0.3:
             self.time_of_last_scoreboard_update = t
-            self.graphics.update_scoreboard(t=t)
+            self.graphics.update_scoreboard(t=config.time_limit - t)
             for player in self.players.values():
                 player.update_scoreboard(batch=self.graphics.main_batch)
         self.move(dt=dt)
