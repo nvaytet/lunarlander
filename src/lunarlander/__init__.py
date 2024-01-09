@@ -5,7 +5,7 @@ from .config import Config
 config = Config()
 
 from .engine import Engine
-from . import helpers
+from .core import Instructions
 
 
 def play(*args, **kwargs):

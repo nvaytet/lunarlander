@@ -12,7 +12,7 @@ from . import config
 from .asteroid import Asteroid
 from .base import BaseProxy
 from .fight import fight
-from .game_map import GameMap
+from .terrain import Terrain
 from .graphics import Graphics
 from .player import Player
 from .tools import ReadOnly
@@ -24,15 +24,15 @@ def add_key_actions(window, players):
     def on_key_press(symbol, modifiers):
         if symbol == pyglet.window.key.UP:
             for player in players.values():
-                if player.fuel > 0:
+                if player.flying:
                     player.main_thruster = True
         elif symbol == pyglet.window.key.LEFT:
             for player in players.values():
-                if player.fuel > 0:
+                if player.flying:
                     player.left_thruster = True
         elif symbol == pyglet.window.key.RIGHT:
             for player in players.values():
-                if player.fuel > 0:
+                if player.flying:
                     player.right_thruster = True
 
     @window.event
@@ -53,7 +53,7 @@ class Engine:
         self,
         bots,
         # players: dict,
-        # safe=False,
+        safe=False,
         # high_contrast=False,
         # test=True,
         # time_limit=300,
@@ -78,7 +78,7 @@ class Engine:
         # self.scores = self.read_scores(players=players, test=test)
         # self.dead_players = []
         # self.high_contrast = high_contrast
-        # self.safe = safe
+        self.safe = safe
         # self.player_ais = players
         # self.players = {}
         # self.explosions = {}
@@ -90,7 +90,7 @@ class Engine:
         self.time_of_last_scoreboard_update = 0
         self.time_of_last_asteroid = 0
 
-        self.game_map = GameMap(
+        self.game_map = Terrain(
             # nx=self.nx, ny=self.ny, high_contrast=self.high_contrast
         )
         self.graphics = Graphics(game_map=self.game_map, fullscreen=fullscreen)
@@ -257,6 +257,7 @@ class Engine:
             "vx": player.velocity[0],
             "vy": player.velocity[1],
             "fuel": player.fuel,
+            "terrain": self.game_map.terrain,
         }
         if self.safe:
             try:
@@ -267,8 +268,8 @@ class Engine:
             instructions = self.bots[player.team].run(**args)
         return instructions
 
-    def call_player_bots(self, t: float, dt: float, players: List[Player]):
-        for player in players:
+    def call_player_bots(self, t: float, dt: float):
+        for player in self.players.values():
             if self.safe:
                 try:
                     player.execute_bot_instructions(
@@ -288,24 +289,27 @@ class Engine:
     def check_landing(self):
         for player in self.players.values():
             if (not player.dead) and (player.y < config.ny - 1):
-                pixels = self.game_map.array[
-                    int(player.y - config.avatar_size[1] / 2),
+                lem_floor = int(player.y - config.avatar_size[1] / 2)
+                y_values = self.game_map.terrain[
+                    # int(player.y - config.avatar_size[1] / 2),
                     int(player.x - config.avatar_size[0] / 2) : int(
                         player.x + config.avatar_size[0] / 2
                     ),
                 ]
-                if any(pixels == 1):
+                if any(y_values >= lem_floor):
                     print("speed", np.linalg.norm(player.velocity))
                     print("angle", player.heading)
-                    uneven_terrain = any(pixels == 0)
+                    # uneven_terrain = any(pixels == 0)
+                    uneven_terrain = any(y_values < lem_floor)
                     too_fast = (
                         np.linalg.norm(player.velocity) > config.max_landing_speed
                     )
                     landing_angle = np.abs(((player.heading + 180) % 360) - 180)
                     bad_angle = landing_angle > config.max_landing_angle
-                    if uneven_terrain or too_fast or bad_angle:
+                    if any([uneven_terrain, too_fast, bad_angle]):
                         reason = []
                         if uneven_terrain:
+                            print(y_values, lem_floor)
                             reason.append("uneven terrain")
                         if too_fast:
                             reason.append(f"velocity={player.velocity}")
@@ -353,6 +357,8 @@ class Engine:
             self.graphics.update_scoreboard(t=config.time_limit - t)
             for player in self.players.values():
                 player.update_scoreboard(batch=self.graphics.main_batch)
+        if not self._manual:
+            self.call_player_bots(t, dt)
         self.move(dt=dt)
         self.check_landing()
         if self._asteroids:

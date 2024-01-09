@@ -2,7 +2,7 @@
 
 import uuid
 from itertools import chain
-from typing import Any, Iterator, Tuple
+from typing import Any, Iterator, Optional, Tuple
 
 from matplotlib.colors import hex2color
 import numpy as np
@@ -209,6 +209,10 @@ class Player:
         self._right_thruster = value
         self.right_flame.opacity = 255 * value
 
+    @property
+    def flying(self):
+        return (self.fuel > 0) and (not self.dead)
+
     def get_thrust(self):
         h = np.radians(self.heading + 90.0)
         vector = np.array([np.cos(h), np.sin(h)])
@@ -268,10 +272,12 @@ class Player:
     def land(self):
         self.dead = True
 
-    def execute_bot_instructions(self, instructions: Instructions):
-        self.main_thruster = instructions.main
-        self.left_thruster = instructions.left
-        self.right_thruster = instructions.right
+    def execute_bot_instructions(self, instructions: Optional[Instructions]):
+        if instructions is None:
+            return
+        self.main_thruster = instructions.main and self.flying
+        self.left_thruster = instructions.left and self.flying
+        self.right_thruster = instructions.right and self.flying
 
         # # Update vertical velocity based on vertical acceleration
         # self.vertical_velocity += self.vertical_acceleration * time_step

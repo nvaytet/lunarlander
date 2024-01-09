@@ -16,7 +16,7 @@ start = None
 
 lunarlander.play(
     bots=bots,  # List of bots to use
-    manual=True,  # Set to True to play manually
+    manual=False,  # Set to True to play manually
 )
 
 
