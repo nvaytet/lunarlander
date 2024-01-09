@@ -304,7 +304,8 @@ class Engine:
                     too_fast = (
                         np.linalg.norm(player.velocity) > config.max_landing_speed
                     )
-                    landing_angle = np.abs(((player.heading + 180) % 360) - 180)
+                    # landing_angle = np.abs(((player.heading + 180) % 360) - 180)
+                    landing_angle = np.abs(player.heading)
                     bad_angle = landing_angle > config.max_landing_angle
                     if any([uneven_terrain, too_fast, bad_angle]):
                         reason = []

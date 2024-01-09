@@ -172,11 +172,12 @@ class Player:
 
     @property
     def heading(self):
-        return -self.avatar.rotation
+        angle = -self.avatar.rotation
+        return ((angle + 180) % 360) - 180
 
     @heading.setter
     def heading(self, value):
-        value = value % 360
+        value = (value + 360) % 360
         self.avatar.rotation = -value
         self.main_flame.rotation = -value
         self.left_flame.rotation = -value
