@@ -1,13 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Any, List, Tuple
 
 import importlib_resources as ir
 import numpy as np
-import pyglet
 from matplotlib import font_manager
-import matplotlib.pyplot as plt
-from PIL import Image, ImageFont, ImageDraw
+from PIL import ImageFont
 
 
 class Config:

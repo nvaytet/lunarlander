@@ -1,9 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import hashlib
-from typing import Any, Iterator, Tuple
-
-import numpy as np
 from PIL import Image, ImageDraw
 import pyglet
 

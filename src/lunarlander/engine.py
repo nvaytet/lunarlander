@@ -1,9 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import importlib
-import os
 import time
-from typing import Dict, List
 
 import numpy as np
 import pyglet

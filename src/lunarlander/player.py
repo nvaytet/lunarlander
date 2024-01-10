@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import uuid
-from itertools import chain
-from typing import Any, Iterator, Optional, Tuple
+from typing import Optional
 
 from matplotlib.colors import hex2color
 import numpy as np
@@ -20,7 +18,7 @@ class Player:
         self,
         number: int,
         team: str,
-        batch: Any,
+        batch: pyglet.graphics.Batch,
     ):
         self.team = team
         self.number = number

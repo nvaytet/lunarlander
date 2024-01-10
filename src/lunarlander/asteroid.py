@@ -1,20 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import uuid
-from itertools import chain
-from typing import Any, Iterator, Tuple
-
-from matplotlib.colors import hex2color
 import numpy as np
 from PIL import Image
 import pyglet
 
 from . import config
-from .base import Base
-from .core import Instructions
-
-# from .game_map import MapView
-from .tools import recenter_image, string_to_color, text_to_raw_image
+from .tools import recenter_image
 
 
 class Asteroid:
@@ -25,11 +17,9 @@ class Asteroid:
         v: float,
         heading: float,
         size: float,
-        batch: Any,
+        batch: pyglet.graphics.Batch,
     ):
         self.id = uuid.uuid4().hex
-        # self.x = x
-        # self.y = y
         self.v = v
         self.size = int(size)
         self.heading = heading
