@@ -11,8 +11,6 @@ from .tools import text_to_image
 
 class Graphics:
     def __init__(self, game_map, fullscreen: bool = False):
-        # self.engine = engine
-
         self.window = pyglet.window.Window(
             config.nx + config.scoreboard_width,
             config.ny,
@@ -22,8 +20,6 @@ class Graphics:
         )
 
         self.game_map = game_map
-
-        # self.background = background_image.get_texture()
         self.main_batch = pyglet.graphics.Batch()
         self.time_label = pyglet.sprite.Sprite(
             img=text_to_image(
@@ -36,19 +32,11 @@ class Graphics:
         self.time_left = None
         self.exit_message = None
 
-        # self.scoreboard_labels = []
-
         @self.window.event
         def on_draw():
             self.window.clear()
             self.game_map.background_image.get_texture().blit(0, 0)
-            # self.background.blit(0, 0)
             self.main_batch.draw()
-
-        # @self.window.event
-        # def on_key_press(symbol, modifiers):
-        #     if symbol == pyglet.window.key.P:
-        #         self.engine.paused = not self.engine.paused
 
     def update_scoreboard(self, t: float):
         if self.time_left is not None:

@@ -10,5 +10,4 @@ from .core import Instructions
 
 def play(*args, **kwargs):
     eng = Engine(*args, **kwargs)
-    # eng.finalize()
     return eng
