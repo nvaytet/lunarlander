@@ -70,7 +70,7 @@ class Engine:
 
         self.nx = config.nx
         self.ny = config.ny
-        self.time_limit = 100
+        # self.time_limit = 100
         self.start_time = None
         self._manual = manual
         self._asteroids = asteroids
@@ -86,7 +86,7 @@ class Engine:
         # self.paused = False
         # self.previously_paused = False
         # self.pause_time = 0
-        # self.exiting = False
+        self.exiting = False
         self.time_of_last_scoreboard_update = 0
         self.time_of_last_asteroid = 0
 
@@ -223,23 +223,23 @@ class Engine:
         self.exiting = True
         self.exit_time = time.time() + 1
         print(message)
-        score_left = len(self.dead_players)
-        for name, p in self.players.items():
-            if not p.dead:
-                p.update_score(score_left)
-        self.make_player_avatars()
-        sorted_scores = [
-            (p.team, p.global_score)
-            for p in sorted(
-                self.players.values(), key=lambda x: x.global_score, reverse=True
-            )
-        ]
-        fname = "scores.txt"
-        with open(fname, "w") as f:
-            for name, p in self.players.items():
-                f.write(f"{name}: {p.global_score}\n")
-        for i, (name, score) in enumerate(sorted_scores):
-            print(f"{i + 1}. {name}: {score}")
+        # score_left = len(self.dead_players)
+        # for name, p in self.players.items():
+        #     if not p.dead:
+        #         p.update_score(score_left)
+        # self.make_player_avatars()
+        # sorted_scores = [
+        #     (p.team, p.global_score)
+        #     for p in sorted(
+        #         self.players.values(), key=lambda x: x.global_score, reverse=True
+        #     )
+        # ]
+        # fname = "scores.txt"
+        # with open(fname, "w") as f:
+        #     for name, p in self.players.items():
+        #         f.write(f"{name}: {p.global_score}\n")
+        # for i, (name, score) in enumerate(sorted_scores):
+        #     print(f"{i + 1}. {name}: {score}")
 
     def finalize(self):
         # Dump player maps
@@ -322,7 +322,9 @@ class Engine:
                         print(f"Player {player.team} landed!")
 
     def update_asteroids(self, t, dt):
-        delay = (1.0 - 5.0) / config.time_limit * t + 5.0
+        delay = (
+            1.0 - config.asteroid_delay
+        ) / config.time_limit * t + config.asteroid_delay
         if (t - self.time_of_last_asteroid) > delay:
             self.meteors.append(
                 Asteroid(
@@ -353,6 +355,16 @@ class Engine:
         if self.start_time is None:
             self.start_time = time.time()
         t = time.time() - self.start_time
+
+        if self.exiting:
+            if self.graphics.exit_message is None:
+                self.graphics.show_exit_message()
+            return
+
+        if t > config.time_limit:
+            self.exit(message="Time limit reached!")
+            return
+
         if abs(t - self.time_of_last_scoreboard_update) > 0.3:
             self.time_of_last_scoreboard_update = t
             self.graphics.update_scoreboard(t=config.time_limit - t)
@@ -364,6 +376,12 @@ class Engine:
         self.check_landing()
         if self._asteroids:
             self.update_asteroids(t, dt)
+
+        number_of_alive_players = sum(
+            not player.dead for player in self.players.values()
+        )
+        if number_of_alive_players == 0:
+            self.exit(message="All players have either crashed or landed!")
 
         return
         if self.exiting:

@@ -8,7 +8,6 @@ from PIL import Image, ImageDraw
 import pyglet
 
 from . import config
-from .config import scale_image
 
 
 def wrap_position(x: float, y: float) -> Tuple[float, float]:
@@ -81,10 +80,8 @@ def text_to_raw_image(text, width, height, font=None):
     return img
 
 
-def text_to_image(text, width, height, scale=True, font=None):
+def text_to_image(text, width, height, font=None):
     img = text_to_raw_image(text, width, height, font=font)
-    if scale:
-        img = scale_image(img, config.scaling)
     return pyglet.image.ImageData(
         width=img.width,
         height=img.height,

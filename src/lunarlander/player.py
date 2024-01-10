@@ -78,7 +78,7 @@ class Player:
         self.score_avatar = pyglet.sprite.Sprite(
             img=recenter_image(imd),
             x=config.nx + 30,
-            y=config.ny - 100 - 35 * self.number,
+            y=config.ny - 100 - 75 * self.number,
             batch=batch,
         )
 
@@ -268,6 +268,14 @@ class Player:
             y=y,
             batch=batch,
         )
+
+        self.score_avatar.delete()
+        self.score_avatar = pyglet.sprite.Sprite(
+            img=recenter_image(imd),
+            x=config.nx + 30,
+            y=config.ny - 100 - 75 * self.number,
+            batch=batch,
+        )
         print(f"Player {self.team} crashed! Reason: {reason}.")
 
     def land(self):
@@ -394,10 +402,10 @@ class Player:
 
     def update_scoreboard(self, batch):
         # self.score_position = ind
-        img = Image.new("RGBA", (150, 44), (0, 0, 0, 0))
+        img = Image.new("RGBA", (150, 54), (0, 0, 0, 0))
         img.paste(
             text_to_raw_image(
-                f"{self.team}: fuel={max(self.fuel, 0):.1f}",
+                f"{self.team}",
                 width=150,
                 height=24,
                 font=config.medium_font,
@@ -406,7 +414,7 @@ class Player:
         )
         img.paste(
             text_to_raw_image(
-                f"v=[{self.velocity[0]:.1f}, {self.velocity[1]:.1f}]",
+                f"x={self.x:.1f}, y={self.x:.1f}",
                 width=150,
                 height=24,
                 font=config.medium_font,
@@ -415,12 +423,21 @@ class Player:
         )
         img.paste(
             text_to_raw_image(
-                f"angle={self.heading:.1f}",
+                f"v=[{self.velocity[0]:.1f}, {self.velocity[1]:.1f}]",
                 width=150,
                 height=24,
                 font=config.medium_font,
             ),
             (0, 28),
+        )
+        img.paste(
+            text_to_raw_image(
+                f"θ={self.heading:.1f}, fuel={self.fuel:.1f}",
+                width=150,
+                height=24,
+                font=config.medium_font,
+            ),
+            (0, 42),
         )
 
         imd = pyglet.image.ImageData(
@@ -434,8 +451,8 @@ class Player:
             self.score_text.delete()
         self.score_text = pyglet.sprite.Sprite(
             img=imd,
-            x=config.nx + 60,
-            y=config.ny - 120 - 35 * self.number,
+            x=config.nx + 55,
+            y=config.ny - 120 - 75 * self.number,
             batch=batch,
         )
 

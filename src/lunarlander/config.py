@@ -9,48 +9,6 @@ from matplotlib import font_manager
 import matplotlib.pyplot as plt
 from PIL import Image, ImageFont, ImageDraw
 
-# MAX_HEALTH = 100
-
-
-def _recenter_image(img: pyglet.image.ImageData) -> pyglet.image.ImageData:
-    img.anchor_x = img.width // 2
-    img.anchor_y = img.height // 2
-    return img
-
-
-def scale_image(img: Image, scale: float) -> Image:
-    return img.resize((int(img.width * scale), int(img.height * scale)))
-
-
-def _to_image(img: Image) -> pyglet.image.ImageData:
-    return _recenter_image(
-        pyglet.image.ImageData(
-            width=img.width,
-            height=img.height,
-            fmt="RGBA",
-            data=img.tobytes(),
-            pitch=-img.width * 4,
-        )
-    )
-
-
-def _make_base_image(resources: Any, name: str, rgb: Tuple[float, ...]) -> Image:
-    img = Image.open(resources / f"{name}.png")
-    img = img.convert("RGBA")
-    data = img.getdata()
-    new_data = np.array(data).reshape(img.height, img.width, 4)
-    for i in range(3):
-        new_data[..., i] = int(round(rgb[i] * 255))
-    return Image.fromarray(new_data.astype(np.uint8))
-
-
-def _make_colors(num_colors: int) -> List[Tuple[float, ...]]:
-    cols = []
-    cmap = plt.get_cmap("gist_ncar")
-    for i in range(num_colors):
-        cols.append(cmap(i / (num_colors - 1)))
-    return cols
-
 
 class Config:
     def __init__(self):
@@ -64,9 +22,8 @@ class Config:
         self.medium_font = ImageFont.truetype(file, size=12)
         self.nx = 1920 - self.scoreboard_width
         self.ny = 1080
-        # self.gravity = np.array([0, -1.62])  # m/s^2
         self.time_limit = 60 * 5
-        self.gravity = np.array([0, -1.0])  # m/s^2
+        self.gravity = np.array([0, -1.62])  # m/s^2
         self.lem_mass = 15_000  # kg
         self.thrust = np.abs(self.gravity[1]) * 3  # N
         self.rotation_speed = 15.0
@@ -76,93 +33,4 @@ class Config:
         self.main_engine_burn_rate = 5
         self.rotation_engine_burn_rate = 2
         self.asteroid_delay = 5.0
-        self.crater_radius = self.avatar_size[0] // 2 + 1
-
-    # def initialize(self, nplayers: int, fullscreen=False):
-    #     dy = self.taskbar_height * (not fullscreen)
-    #     ref_nx = 1920 - self.scoreboard_width
-    #     ref_ny = 1080 - dy
-    #     max_nx = 3840
-    #     max_ny = 2160
-    #     area = nplayers * (ref_nx * ref_ny) / 10
-    #     ratio = ref_nx / ref_ny
-    #     self.nx = min(max(int(np.sqrt(area * ratio)), ref_nx), max_nx)
-    #     self.ny = min(max(int(np.sqrt(area / ratio)), ref_ny), max_ny)
-
-    #     display = pyglet.canvas.Display()
-    #     screen = display.get_default_screen()
-    #     screen_width = screen.width - self.scoreboard_width
-    #     screen_height = screen.height - dy
-    #     self.scaling = min(min(screen_width / self.nx, screen_height / self.ny), 1.0)
-
-    #     self.generate_images(nplayers)
-
-    def generate_images(self, nplayers: int):
-        img = Image.open(self.resources / "explosion.png")
-        self.images = {"explosion": _to_image(scale_image(img, self.scaling))}
-        self.colors = _make_colors(nplayers)
-        for n in range(nplayers):
-            rgb = self.colors[n]
-            self.generate_vehicle_images(n, rgb)
-            self.generate_base_images(n, rgb)
-            self.generate_dead_images(n, rgb)
-
-    def generate_vehicle_images(self, n: int, rgb: tuple):
-        for name in ("jet", "ship", "tank"):
-            for health in range(0, self.health[name] + 1, 10):
-                img = _make_base_image(self.resources, name, rgb)
-                d = ImageDraw.Draw(img)
-                d.text(
-                    (img.width / 2, img.height / 2),
-                    str(health),
-                    fill=(0, 0, 0),
-                    font=self.small_font,
-                    anchor="mm",
-                )
-                self.images[f"{name}_{n}_{health}"] = _to_image(
-                    scale_image(img, self.scaling)
-                )
-
-    def generate_base_images(self, n: int, rgb: tuple):
-        name = "base"
-        img = _make_base_image(self.resources, name, rgb)
-        self.images[f"player_{n}"] = scale_image(img, self.scaling)
-        self.images[f"{name}_{n}"] = _to_image(scale_image(img, self.scaling))
-        d = ImageDraw.Draw(img)
-        d.text(
-            (img.width / 2, img.height / 2),
-            "C",
-            fill=(0, 0, 0),
-            font=self.large_font,
-            anchor="mm",
-        )
-        self.images[f"{name}_{n}_C"] = _to_image(scale_image(img, self.scaling))
-
-        for health in range(0, self.health["base"] + 1, 10):
-            img = Image.new("RGBA", (24, 24), (0, 0, 0, 0))
-            d = ImageDraw.Draw(img)
-            d.text(
-                (img.width / 2, img.height / 2),
-                f"{health}",
-                fill=(0, 0, 0),
-                font=self.medium_font,
-                anchor="mm",
-            )
-            self.images[f"health_{health}"] = _to_image(scale_image(img, self.scaling))
-        for mines in range(0, 20):
-            img = Image.new("RGBA", (24, 24), (0, 0, 0, 0))
-            d = ImageDraw.Draw(img)
-            d.text(
-                (img.width / 2, img.height / 2),
-                f"[{mines}]",
-                fill=(0, 0, 0),
-                font=self.medium_font,
-                anchor="mm",
-            )
-            self.images[f"mines_{mines}"] = _to_image(scale_image(img, self.scaling))
-
-    def generate_dead_images(self, n: int, rgb: tuple):
-        name = "skull"
-        self.images[f"{name}_{n}"] = scale_image(
-            _make_base_image(self.resources, name, rgb), self.scaling
-        )
+        self.crater_radius = self.avatar_size[0] // 2 - 1
