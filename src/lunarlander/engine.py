@@ -7,38 +7,33 @@ import pyglet
 
 from . import config
 from .asteroid import Asteroid
+from .collisions import collisions
 from .terrain import Terrain
 from .graphics import Graphics
 from .player import Player
 
 
-def add_key_actions(window, players):
+def add_key_actions(window, player):
     @window.event
     def on_key_press(symbol, modifiers):
         if symbol == pyglet.window.key.UP:
-            for player in players.values():
-                if player.flying:
-                    player.main_thruster = True
+            if player.flying:
+                player.main_thruster = True
         elif symbol == pyglet.window.key.LEFT:
-            for player in players.values():
-                if player.flying:
-                    player.left_thruster = True
+            if player.flying:
+                player.left_thruster = True
         elif symbol == pyglet.window.key.RIGHT:
-            for player in players.values():
-                if player.flying:
-                    player.right_thruster = True
+            if player.flying:
+                player.right_thruster = True
 
     @window.event
     def on_key_release(symbol, modifiers):
         if symbol == pyglet.window.key.UP:
-            for player in players.values():
-                player.main_thruster = False
+            player.main_thruster = False
         elif symbol == pyglet.window.key.LEFT:
-            for player in players.values():
-                player.left_thruster = False
+            player.left_thruster = False
         elif symbol == pyglet.window.key.RIGHT:
-            for player in players.values():
-                player.right_thruster = False
+            player.right_thruster = False
 
 
 class Engine:
@@ -51,7 +46,6 @@ class Engine:
         seed=None,
         fullscreen=False,
         manual=False,
-        asteroids=True,
     ):
         if seed is not None:
             np.random.seed(seed)
@@ -60,8 +54,7 @@ class Engine:
         self.ny = config.ny
         self.start_time = None
         self._manual = manual
-        self._asteroids = asteroids
-        self.meteors = []
+        self.asteroids = []
         # self.scores = self.read_scores(players=players, test=test)
         # self.high_contrast = high_contrast
         self.safe = safe
@@ -73,14 +66,19 @@ class Engine:
         self.graphics = Graphics(game_map=self.game_map, fullscreen=fullscreen)
 
         self.bots = {bot.team: bot for bot in bots}
+
+        starting_positions = self.make_starting_positions(nplayers=len(self.bots))
+
         self.players = {}
-        for i, name in enumerate(self.bots):
+        for i, (name, pos) in enumerate(zip(self.bots, starting_positions)):
             self.players[name] = Player(
-                team=name, number=i, batch=self.graphics.main_batch
+                team=name, number=i, position=pos, batch=self.graphics.main_batch
             )
 
         if self._manual:
-            add_key_actions(window=self.graphics.window, players=self.players)
+            add_key_actions(
+                window=self.graphics.window, player=list(self.players.values())[0]
+            )
 
         pyglet.clock.schedule_interval(self.update, 1 / config.fps)
         pyglet.app.run()
@@ -98,6 +96,11 @@ class Engine:
     #         scores = {p: 0 for p in players}
     #     print("Scores:", scores)
     #     return scores
+
+    def make_starting_positions(self, nplayers: int) -> list:
+        random_origin = np.random.uniform(0, config.nx)
+        step = config.nx / nplayers
+        return [int(random_origin + i * step) % config.nx for i in range(nplayers)]
 
     def exit(self, message: str):
         self.exiting = True
@@ -144,7 +147,8 @@ class Engine:
         return instructions
 
     def call_player_bots(self, t: float, dt: float):
-        for player in self.players.values():
+        players = list(self.players.values())
+        for player in players[int(self._manual) :]:
             if self.safe:
                 try:
                     player.execute_bot_instructions(
@@ -201,7 +205,7 @@ class Engine:
             1.0 - config.asteroid_delay
         ) / config.time_limit * t + config.asteroid_delay
         if (t - self.time_of_last_asteroid) > delay:
-            self.meteors.append(
+            self.asteroids.append(
                 Asteroid(
                     x=np.random.uniform(0, config.nx),
                     y=config.ny + 100,
@@ -212,19 +216,19 @@ class Engine:
                 )
             )
             self.time_of_last_asteroid = t
-        for meteor in self.meteors:
+        for meteor in self.asteroids:
             meteor.move(dt=dt)
             tip = meteor.tip()
             tip_size = meteor.size * 0.2
-            for player in self.players.values():
-                if not player.dead:
-                    d = np.sqrt((player.x - tip[0]) ** 2 + (player.y - tip[1]) ** 2)
-                    if d < tip_size:
-                        player.crash(reason="asteroid collision")
+            # for player in self.players.values():
+            #     if not player.dead:
+            #         d = np.sqrt((player.x - tip[0]) ** 2 + (player.y - tip[1]) ** 2)
+            #         if d < tip_size:
+            #             player.crash(reason="asteroid collision")
             if tip[1] <= self.game_map.terrain[int(tip[0])]:
                 self.game_map.make_crater(x=int(tip[0]))
                 meteor.avatar.delete()
-                self.meteors.remove(meteor)
+                self.asteroids.remove(meteor)
 
     def update(self, dt: float):
         if self.start_time is None:
@@ -245,12 +249,12 @@ class Engine:
             self.graphics.update_scoreboard(t=config.time_limit - t)
             for player in self.players.values():
                 player.update_scoreboard(batch=self.graphics.main_batch)
-        if not self._manual:
-            self.call_player_bots(t, dt)
+        # if True:  # not self._manual:
+        self.call_player_bots(t, dt)
         self.move(dt=dt)
         self.check_landing()
-        if self._asteroids:
-            self.update_asteroids(t, dt)
+        collisions(players=list(self.players.values()))
+        self.update_asteroids(t, dt)
 
         number_of_alive_players = sum(
             not player.dead for player in self.players.values()

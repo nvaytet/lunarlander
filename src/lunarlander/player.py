@@ -18,6 +18,7 @@ class Player:
         self,
         number: int,
         team: str,
+        position: float,
         batch: pyglet.graphics.Batch,
     ):
         self.team = team
@@ -32,11 +33,11 @@ class Player:
         self._rotate_left = False
         self._rotate_right = False
         self.color = string_to_color(team)
-        self.make_avatar(batch=batch)
+        self.make_avatar(position=position, batch=batch)
         self.heading = 90
         self.dead = False
 
-    def make_avatar(self, batch):
+    def make_avatar(self, position, batch):
         img = Image.open(config.resources / f"lem.png")
         img = img.resize(config.avatar_size).convert("RGBA")
         data = img.getdata()
@@ -54,7 +55,7 @@ class Player:
         )
         self.avatar = pyglet.sprite.Sprite(
             img=recenter_image(imd),
-            x=100,
+            x=position,
             y=config.ny - 100,
             batch=batch,
         )
@@ -152,6 +153,10 @@ class Player:
         self.main_flame.y = value
         self.left_flame.y = value
         self.right_flame.y = value
+
+    @property
+    def position(self):
+        return np.array([self.x, self.y])
 
     @property
     def heading(self):
@@ -284,7 +289,7 @@ class Player:
         )
         img.paste(
             text_to_raw_image(
-                f"x={self.x:.1f}, y={self.x:.1f}",
+                f"x={self.x:.1f}, y={self.y:.1f}",
                 width=150,
                 height=24,
                 font=config.medium_font,
