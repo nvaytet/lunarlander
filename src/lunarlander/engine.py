@@ -7,10 +7,10 @@ import pyglet
 
 from . import config
 from .asteroid import Asteroid
-from .collisions import collisions
-from .terrain import Terrain
 from .graphics import Graphics
 from .player import Player
+from .scores import read_scores
+from .terrain import Terrain
 
 
 def add_key_actions(window, player):
@@ -42,7 +42,7 @@ class Engine:
         bots,
         safe=False,
         # high_contrast=False,
-        # test=True,
+        test=True,
         seed=None,
         fullscreen=False,
         manual=False,
@@ -78,6 +78,8 @@ class Engine:
                 back_batch=self.graphics.background_batch,
                 main_batch=self.graphics.main_batch,
             )
+
+        self.scores = read_scores(players=self.players, test=test)
 
         if self._manual:
             add_key_actions(
@@ -128,6 +130,9 @@ class Engine:
         # for i, (name, score) in enumerate(sorted_scores):
         #     print(f"{i + 1}. {name}: {score}")
 
+    def undead_players(self):
+        return (p for p in self.players.values() if not p.dead)
+
     def execute_player_bot(self, player, t: float, dt: float):
         instructions = None
         args = {
@@ -151,7 +156,7 @@ class Engine:
         return instructions
 
     def call_player_bots(self, t: float, dt: float):
-        players = list(self.players.values())
+        players = list(self.undead_players())
         for player in players[int(self._manual) :]:
             if self.safe:
                 try:
@@ -165,44 +170,68 @@ class Engine:
                     self.execute_player_bot(player=player, t=t, dt=dt)
                 )
 
-    def move(self, dt: float):
-        for player in self.players.values():
+    def move_players(self, dt: float):
+        for player in self.undead_players():
             player.move(dt=dt * 2)
 
-    def check_landing(self):
-        for player in self.players.values():
-            if (not player.dead) and (player.y < config.ny - 1):
-                lem_floor = int(player.y - config.avatar_size[1] / 2)
-                y_values = self.game_map.terrain[
-                    # int(player.y - config.avatar_size[1] / 2),
-                    int(player.x - config.avatar_size[0] / 2) : int(
-                        player.x + config.avatar_size[0] / 2
-                    ),
-                ]
-                if any(y_values >= lem_floor):
-                    print("speed", np.linalg.norm(player.velocity))
-                    print("angle", player.heading)
-                    # uneven_terrain = any(pixels == 0)
-                    uneven_terrain = any(y_values < lem_floor)
-                    too_fast = (
-                        np.linalg.norm(player.velocity) > config.max_landing_speed
-                    )
-                    # landing_angle = np.abs(((player.heading + 180) % 360) - 180)
-                    landing_angle = np.abs(player.heading)
-                    bad_angle = landing_angle > config.max_landing_angle
-                    if any([uneven_terrain, too_fast, bad_angle]):
-                        reason = []
-                        if uneven_terrain:
-                            print(y_values, lem_floor)
-                            reason.append("uneven terrain")
-                        if too_fast:
-                            reason.append(f"velocity={player.velocity}")
-                        if bad_angle:
-                            reason.append(f"landing angle={landing_angle}")
-                        player.crash(reason=", ".join(reason))
-                    else:
-                        player.land()
-                        print(f"Player {player.team} landed!")
+    def check_landing(self, t: float):
+        for player in self.undead_players():
+            # if (not player.dead) and (player.y < config.ny - 1):
+            # if (not player.dead) and (player.y < config.ny - 1):
+            lem_floor = int(player.y - config.avatar_size[1] / 2)
+            y_values = self.game_map.terrain[
+                # int(player.y - config.avatar_size[1] / 2),
+                int(player.x - config.avatar_size[0] / 2) : int(
+                    player.x + config.avatar_size[0] / 2
+                ),
+            ]
+            if any(y_values >= lem_floor):
+                print("speed", np.linalg.norm(player.velocity))
+                print("angle", player.heading)
+                # uneven_terrain = any(pixels == 0)
+                uneven_terrain = any(y_values < lem_floor)
+                too_fast = np.linalg.norm(player.velocity) > config.max_landing_speed
+                # landing_angle = np.abs(((player.heading + 180) % 360) - 180)
+                landing_angle = np.abs(player.heading)
+                bad_angle = landing_angle > config.max_landing_angle
+                if any([uneven_terrain, too_fast, bad_angle]):
+                    reason = []
+                    if uneven_terrain:
+                        print(y_values, lem_floor)
+                        reason.append("uneven terrain")
+                    if too_fast:
+                        reason.append(f"velocity={player.velocity}")
+                    if bad_angle:
+                        reason.append(f"landing angle={landing_angle}")
+                    player.crash(reason=", ".join(reason))
+                else:
+                    player.land(t)
+                    print(f"Player {player.team} landed!")
+
+    def compute_collisions(self):
+        players = list(self.undead_players())
+        n = len(players)
+        x = np.array([p.x for p in players])
+        y = np.array([p.y for p in players])
+        xpos1 = np.broadcast_to(x, (n, n))
+        xpos2 = xpos1.T
+        ypos1 = np.broadcast_to(y, (n, n))
+        ypos2 = ypos1.T
+        dist = np.tril(np.sqrt((xpos2 - xpos1) ** 2 + (ypos2 - ypos1) ** 2))
+        lems1, lems2 = np.where((dist < config.collision_radius) & (dist > 0))
+        for i, j in zip(lems1, lems2):
+            p1 = players[i]
+            p2 = players[j]
+            x1 = p1.position
+            v1 = p1.velocity
+            x2 = p2.position
+            v2 = p2.velocity
+            p1.velocity = v1 - np.dot(v1 - v2, x1 - x2) / np.linalg.norm(
+                x1 - x2
+            ) ** 2 * (x1 - x2)
+            p2.velocity = v2 - np.dot(v2 - v1, x2 - x1) / np.linalg.norm(
+                x2 - x1
+            ) ** 2 * (x2 - x1)
 
     def update_asteroids(self, t, dt):
         delay = (
@@ -220,10 +249,10 @@ class Engine:
                 )
             )
             self.time_of_last_asteroid = t
-        for meteor in self.asteroids:
-            meteor.move(dt=dt)
-            tip = meteor.tip()
-            tip_size = meteor.size * 0.2
+        for asteroid in self.asteroids:
+            asteroid.move(dt=dt)
+            tip = asteroid.tip()
+            tip_size = asteroid.size * 0.2
             for player in self.players.values():
                 if not player.dead:
                     d = np.sqrt((player.x - tip[0]) ** 2 + (player.y - tip[1]) ** 2)
@@ -231,8 +260,8 @@ class Engine:
                         player.crash(reason="asteroid collision")
             if tip[1] <= self.game_map.terrain[int(tip[0])]:
                 self.game_map.make_crater(x=int(tip[0]))
-                meteor.avatar.delete()
-                self.asteroids.remove(meteor)
+                asteroid.avatar.delete()
+                self.asteroids.remove(asteroid)
 
     def update(self, dt: float):
         if self.start_time is None:
@@ -255,9 +284,9 @@ class Engine:
                 player.update_scoreboard(batch=self.graphics.main_batch)
         # if True:  # not self._manual:
         self.call_player_bots(t, dt)
-        self.move(dt=dt)
-        self.check_landing()
-        collisions(players=[p for p in self.players.values() if not p.dead])
+        self.move_players(dt=dt)
+        self.check_landing(t=t)
+        self.compute_collisions()
         self.update_asteroids(t, dt)
         self.graphics.update_stars(t)
 

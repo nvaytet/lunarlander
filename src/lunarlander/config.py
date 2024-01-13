@@ -33,3 +33,7 @@ class Config:
         self.collision_radius = self.avatar_size[0] * 0.5 * np.sqrt(2)
         self.twinkle_period = 4.0
         self.nstars = 500
+        self.score_time_bonus = 100
+        self.score_fuel_bonus = 100
+        self.score_landing_site_bonus = 1000
+        self.score_landing_bonus = 1000

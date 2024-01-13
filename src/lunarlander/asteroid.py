@@ -26,22 +26,15 @@ class Asteroid:
         self.make_avatar(x, y, batch)
 
     def make_avatar(self, x, y, batch):
-        img = Image.open(config.resources / f"asteroid.png")
-        img = img.resize((self.size, self.size)).convert("RGBA")
-
-        imd = pyglet.image.ImageData(
-            width=img.width,
-            height=img.height,
-            fmt="RGBA",
-            data=img.tobytes(),
-            pitch=-img.width * 4,
-        )
+        img = pyglet.image.load(config.resources / f"asteroid.png")
         self.avatar = pyglet.sprite.Sprite(
-            img=recenter_image(imd),
+            img=recenter_image(img),
             x=x,
             y=y,
             batch=batch,
         )
+        self.avatar.width = self.size
+        self.avatar.height = self.size
         self.avatar.rotation = -self.heading
 
     @property

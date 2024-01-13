@@ -81,7 +81,7 @@ class Graphics:
     def show_exit_message(self):
         self.exit_message = pyglet.text.Label(
             "Press ESC to exit",
-            color=(128, 128, 128, 255),
+            color=(153, 51, 153, 255),
             font_size=80,
             x=config.nx * 0.5,
             y=config.ny * 0.5,

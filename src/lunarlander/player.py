@@ -10,7 +10,7 @@ import pyglet
 from . import config
 from .core import Instructions
 
-from .tools import recenter_image, string_to_color, text_to_raw_image
+from .tools import recenter_image, string_to_color, text_to_raw_image, image_to_sprite
 
 
 class Player:
@@ -24,7 +24,7 @@ class Player:
     ):
         self.team = team
         self.number = number
-        self.score_text = None
+        self.score = 0
         self._main_thruster = False
         self._left_thruster = False
         self._right_thruster = False
@@ -46,25 +46,8 @@ class Player:
         back_batch: pyglet.graphics.Batch,
         main_batch: pyglet.graphics.Batch,
     ):
+        # Dark background
         bkg = pyglet.image.load(config.resources / f"lem-background.png")
-        img = Image.open(config.resources / f"lem.png")
-        img = img.resize(config.avatar_size).convert("RGBA")
-        data = img.getdata()
-        array = np.array(data).reshape(img.height, img.width, 4)
-        rgb = hex2color(self.color)
-        # print("where", np.where(array[..., 0] > 0))
-        for i in range(3):
-            array[..., i] = int(round(rgb[i] * 255))
-            # array[..., i] = np.where(array[..., 0] > 0, int(round(rgb[i] * 255)), 0)
-        # print("min, max", array[..., 3].min(), array[..., 3].max())
-
-        imd = pyglet.image.ImageData(
-            width=img.width,
-            height=img.height,
-            fmt="RGBA",
-            data=Image.fromarray(array.astype(np.uint8)).tobytes(),
-            pitch=-img.width * 4,
-        )
         self.avatar_background = pyglet.sprite.Sprite(
             img=recenter_image(bkg),
             x=position,
@@ -74,14 +57,23 @@ class Player:
         self.avatar_background.width = config.avatar_size[0]
         self.avatar_background.height = config.avatar_size[1]
 
-        self.avatar = pyglet.sprite.Sprite(
-            img=recenter_image(imd),
+        # Avatar foreground
+        img = Image.open(config.resources / f"lem.png")
+        img = img.resize(config.avatar_size).convert("RGBA")
+        data = img.getdata()
+        array = np.array(data).reshape(img.height, img.width, 4)
+        rgb = hex2color(self.color)
+        for i in range(3):
+            array[..., i] = int(round(rgb[i] * 255))
+        av_image = Image.fromarray(array.astype(np.uint8))
+        self.avatar = image_to_sprite(
+            img=av_image,
             x=position,
             y=config.ny - 100,
             batch=main_batch,
         )
-        self.score_avatar = pyglet.sprite.Sprite(
-            img=recenter_image(imd),
+        self.score_avatar = image_to_sprite(
+            img=av_image,
             x=config.nx + 30,
             y=config.ny - 100 - 75 * self.number,
             batch=main_batch,
@@ -93,20 +85,12 @@ class Player:
         main_flame_img = flame_img.resize(
             (int(config.avatar_size[0] * s), int(config.avatar_size[1] * s))
         )
-        imd = pyglet.image.ImageData(
-            width=main_flame_img.width,
-            height=main_flame_img.height,
-            fmt="RGBA",
-            data=main_flame_img.tobytes(),
-            pitch=-main_flame_img.width * 4,
-        )
-        imd.anchor_x = main_flame_img.width // 2
-        imd.anchor_y = config.avatar_size[1]
-        self.main_flame = pyglet.sprite.Sprite(
-            img=imd,
+        self.main_flame = image_to_sprite(
+            img=main_flame_img,
             x=self.avatar.x,
             y=self.avatar.y,
             batch=main_batch,
+            anchor=[main_flame_img.width // 2, config.avatar_size[1]],
         )
         self.main_flame.opacity = 0
 
@@ -115,20 +99,15 @@ class Player:
         left_flame_img = flame_img.resize(
             (int(config.avatar_size[0] * s), int(config.avatar_size[1] * s))
         ).rotate(-90)
-        imd = pyglet.image.ImageData(
-            width=left_flame_img.width,
-            height=left_flame_img.height,
-            fmt="RGBA",
-            data=left_flame_img.tobytes(),
-            pitch=-left_flame_img.width * 4,
-        )
-        imd.anchor_x = (config.avatar_size[0] // 2) + left_flame_img.width
-        imd.anchor_y = int(0.75 * left_flame_img.height)
-        self.left_flame = pyglet.sprite.Sprite(
-            img=imd,
+        self.left_flame = image_to_sprite(
+            img=left_flame_img,
             x=self.avatar.x,
             y=self.avatar.y,
             batch=main_batch,
+            anchor=[
+                (config.avatar_size[0] // 2) + left_flame_img.width,
+                int(0.75 * left_flame_img.height),
+            ],
         )
         self.left_flame.opacity = 0
 
@@ -136,20 +115,12 @@ class Player:
         right_flame_img = flame_img.resize(
             (int(config.avatar_size[0] * s), int(config.avatar_size[1] * s))
         ).rotate(90)
-        imd = pyglet.image.ImageData(
-            width=right_flame_img.width,
-            height=right_flame_img.height,
-            fmt="RGBA",
-            data=right_flame_img.tobytes(),
-            pitch=-right_flame_img.width * 4,
-        )
-        imd.anchor_x = -config.avatar_size[0] // 2
-        imd.anchor_y = int(0.75 * right_flame_img.height)
-        self.right_flame = pyglet.sprite.Sprite(
-            img=imd,
+        self.right_flame = image_to_sprite(
+            img=right_flame_img,
             x=self.avatar.x,
             y=self.avatar.y,
             batch=main_batch,
+            anchor=[-config.avatar_size[0] // 2, int(0.75 * right_flame_img.height)],
         )
         self.right_flame.opacity = 0
 
@@ -231,8 +202,8 @@ class Player:
         return (config.thrust * self.main_thruster * (self.fuel > 0)) * vector
 
     def move(self, dt):
-        if self.dead:
-            return
+        # if self.dead:
+        #     return
         acceleration = config.gravity + self.get_thrust()
 
         self.velocity += acceleration * dt
@@ -301,55 +272,29 @@ class Player:
 
     def update_scoreboard(self, batch):
         img = Image.new("RGBA", (150, 54), (0, 0, 0, 0))
-        img.paste(
-            text_to_raw_image(
-                f"{self.team}",
-                width=150,
-                height=24,
-                font=config.medium_font,
-            ),
-            (0, 0),
-        )
-        img.paste(
-            text_to_raw_image(
-                f"x={self.x:.1f}, y={self.y:.1f}",
-                width=150,
-                height=24,
-                font=config.medium_font,
-            ),
-            (0, 14),
-        )
-        img.paste(
-            text_to_raw_image(
-                f"v=[{self.velocity[0]:.1f}, {self.velocity[1]:.1f}]",
-                width=150,
-                height=24,
-                font=config.medium_font,
-            ),
-            (0, 28),
-        )
-        img.paste(
-            text_to_raw_image(
-                f"θ={self.heading:.1f}, fuel={self.fuel:.1f}",
-                width=150,
-                height=24,
-                font=config.medium_font,
-            ),
-            (0, 42),
-        )
+        texts = [
+            f"Team {self.team}",
+            f"x={self.x:.1f}, y={self.y:.1f}",
+            f"v=[{self.velocity[0]:.1f}, {self.velocity[1]:.1f}]",
+            f"θ={self.heading:.1f}, fuel={self.fuel:.1f}",
+        ]
+        for i, text in enumerate(texts):
+            img.paste(
+                text_to_raw_image(
+                    text,
+                    width=150,
+                    height=24,
+                    font=config.medium_font,
+                ),
+                (0, 14 * i),
+            )
 
-        imd = pyglet.image.ImageData(
-            width=img.width,
-            height=img.height,
-            fmt="RGBA",
-            data=img.tobytes(),
-            pitch=-img.width * 4,
-        )
         if self.score_text is not None:
             self.score_text.delete()
-        self.score_text = pyglet.sprite.Sprite(
-            img=imd,
+        self.score_text = image_to_sprite(
+            img=img,
             x=config.nx + 55,
             y=config.ny - 120 - 75 * self.number,
             batch=batch,
+            recenter=False,
         )

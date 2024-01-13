@@ -17,6 +17,7 @@ class Terrain:
         profile[xseed] = 10000 * np.random.random(nseeds)
         self.smooth = gaussian_filter(profile, sigma=30, mode="wrap")
         self.terrain = self.smooth.copy()
+        self.differential = np.diff(self.terrain)
 
         img = Image.open(config.resources / f"lunar-surface.png")
         if (img.width != config.nx) or (img.height != config.ny):
@@ -81,6 +82,7 @@ class Terrain:
             self.terrain[xslice] = float(self.terrain[x])
             self.update_background(xslice, yslice)
         self.background_image = self.terrain_to_image()
+        self.differential = np.diff(self.terrain)
 
     def terrain_to_image(self) -> Image:
         img = Image.fromarray(self.current_background)
