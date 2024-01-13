@@ -19,8 +19,8 @@ start = None
 # start = vg.Location(longitude=-68.004373, latitude=18.180470)
 
 lunarlander.play(
-    bots=bots,  # List of bots to use
-    manual=True,  # Set to True to play manually
+    bots=bots[1:2],  # List of bots to use
+    manual=False,  # Set to True to play manually
 )
 
 

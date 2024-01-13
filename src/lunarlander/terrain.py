@@ -25,17 +25,22 @@ class Terrain:
         self.raw_background = (
             np.array(data).reshape(img.height, img.width, 4).astype(np.uint8)
         )
-        self.current_background = self.raw_background.copy()
+        self.current_background = np.full(
+            (config.ny, config.nx + config.scoreboard_width, 4), 20, dtype=np.uint8
+        )
+        self.current_background[..., 3] = 255
+        self.current_background[:, : config.nx, :] = self.raw_background
+        # self.current_background = self.raw_background.copy()
         self.y_map = np.broadcast_to(
             config.ny - np.arange(config.ny).reshape(config.ny, 1),
             (config.ny, config.nx),
         )
 
-        self.update_background(0, config.nx)
+        self.update_background(slice(0, config.nx))
         self.background_image = self.terrain_to_image()
 
-    def update_background(self, start: int, end: int) -> None:
-        sl = slice(start, end)
+    def update_background(self, sl: slice) -> None:
+        # sl = slice(start, end)
         raw = self.raw_background[:, sl]
         mask = (self.y_map[:, sl] < self.terrain[sl]).astype(int)
         mask = mask.reshape(mask.shape + (1,))
@@ -43,8 +48,19 @@ class Terrain:
 
     def make_crater(self, x: int) -> None:
         r = config.crater_radius
-        self.terrain[x - r : x + r] = float(self.terrain[x])
-        self.update_background(x - r, x + r)
+        slices = []
+        start = x - r
+        end = x + r
+        if start < 0:
+            slices.append(slice(start, None))
+            start = 0
+        if end > config.nx:
+            slices.append(slice(None, end - config.nx))
+            end = config.nx
+        slices.append(slice(start, end))
+        for sl in slices:
+            self.terrain[sl] = float(self.terrain[x])
+            self.update_background(sl)
         self.background_image = self.terrain_to_image()
 
     def terrain_to_image(self) -> Image:

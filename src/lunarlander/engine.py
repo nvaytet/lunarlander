@@ -220,11 +220,11 @@ class Engine:
             meteor.move(dt=dt)
             tip = meteor.tip()
             tip_size = meteor.size * 0.2
-            # for player in self.players.values():
-            #     if not player.dead:
-            #         d = np.sqrt((player.x - tip[0]) ** 2 + (player.y - tip[1]) ** 2)
-            #         if d < tip_size:
-            #             player.crash(reason="asteroid collision")
+            for player in self.players.values():
+                if not player.dead:
+                    d = np.sqrt((player.x - tip[0]) ** 2 + (player.y - tip[1]) ** 2)
+                    if d < tip_size:
+                        player.crash(reason="asteroid collision")
             if tip[1] <= self.game_map.terrain[int(tip[0])]:
                 self.game_map.make_crater(x=int(tip[0]))
                 meteor.avatar.delete()
