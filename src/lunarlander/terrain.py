@@ -36,15 +36,29 @@ class Terrain:
             (config.ny, config.nx),
         )
 
-        self.update_background(slice(0, config.nx))
+        self.update_background(slice(0, config.nx), slice(0, config.ny))
+
+        # Add Earth rise
+        earth = Image.open(config.resources / f"earth.png").convert("RGBA")
+        earth_data = earth.getdata()
+        earth_array = (
+            np.array(earth_data).reshape(earth.height, earth.width, 4).astype(np.uint8)
+        )
+        earth_x = 1400
+        earth_y = 100
+        self.current_background[
+            earth_y : earth_y + earth_array.shape[0],
+            earth_x : earth_x + earth_array.shape[1],
+            :,
+        ] = earth_array
         self.background_image = self.terrain_to_image()
 
-    def update_background(self, sl: slice) -> None:
+    def update_background(self, xslice: slice, yslice: slice) -> None:
         # sl = slice(start, end)
-        raw = self.raw_background[:, sl]
-        mask = (self.y_map[:, sl] < self.terrain[sl]).astype(int)
+        raw = self.raw_background[yslice, xslice]
+        mask = (self.y_map[yslice, xslice] < self.terrain[xslice]).astype(int)
         mask = mask.reshape(mask.shape + (1,))
-        self.current_background[:, sl] = raw * mask
+        self.current_background[yslice, xslice] = raw * mask
 
     def make_crater(self, x: int) -> None:
         r = config.crater_radius
@@ -58,9 +72,11 @@ class Terrain:
             slices.append(slice(None, end - config.nx))
             end = config.nx
         slices.append(slice(start, end))
-        for sl in slices:
-            self.terrain[sl] = float(self.terrain[x])
-            self.update_background(sl)
+        y_val = self.terrain[x]
+        yslice = slice(int(y_val), None)
+        for xslice in slices:
+            self.terrain[xslice] = y_val  # float(self.terrain[x])
+            self.update_background(xslice, yslice)
         self.background_image = self.terrain_to_image()
 
     def terrain_to_image(self) -> Image:
