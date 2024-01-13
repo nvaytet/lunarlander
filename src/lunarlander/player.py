@@ -260,8 +260,9 @@ class Player:
         )
         print(f"Player {self.team} crashed! Reason: {reason}.")
 
-    def land(self):
+    def land(self, time_left, landing_site_width):
         self.dead = True
+        self.score = config.score_landing_bonus
 
     def execute_bot_instructions(self, instructions: Optional[Instructions]):
         if instructions is None:

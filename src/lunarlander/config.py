@@ -36,4 +36,4 @@ class Config:
         self.score_time_bonus = 100
         self.score_fuel_bonus = 100
         self.score_landing_site_bonus = 1000
-        self.score_landing_bonus = 1000
+        self.score_landing_bonus = 10
