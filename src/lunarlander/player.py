@@ -43,8 +43,11 @@ class Player:
         data = img.getdata()
         array = np.array(data).reshape(img.height, img.width, 4)
         rgb = hex2color(self.color)
+        # print("where", np.where(array[..., 0] > 0))
         for i in range(3):
             array[..., i] = int(round(rgb[i] * 255))
+            # array[..., i] = np.where(array[..., 0] > 0, int(round(rgb[i] * 255)), 0)
+        # print("min, max", array[..., 3].min(), array[..., 3].max())
 
         imd = pyglet.image.ImageData(
             width=img.width,

@@ -3,6 +3,8 @@
 import datetime
 import pyglet
 
+import numpy as np
+
 from . import config
 from .tools import text_to_image
 
@@ -18,6 +20,7 @@ class Graphics:
         )
 
         self.game_map = game_map
+        self.star_batch = pyglet.graphics.Batch()
         self.main_batch = pyglet.graphics.Batch()
         self.time_label = pyglet.sprite.Sprite(
             img=text_to_image(
@@ -29,12 +32,38 @@ class Graphics:
         )
         self.time_left = None
         self.exit_message = None
+        self.make_stars()
 
         @self.window.event
         def on_draw():
             self.window.clear()
             self.game_map.background_image.get_texture().blit(0, 0)
+            self.star_batch.draw()
             self.main_batch.draw()
+
+    def make_stars(self):
+        # star_image = pyglet.image.load(config.resources / f"star.png")
+        self.stars = []
+        self.star_t0 = np.random.uniform(0, config.twinkle_period, config.nstars)
+        xstar = np.random.uniform(0, config.nx, config.nstars)
+        ystar = np.random.uniform(500, config.ny, config.nstars)
+        for x, y in zip(xstar, ystar):
+            self.stars.append(
+                pyglet.shapes.Circle(
+                    x, y, 1, color=(255, 255, 255, 255), batch=self.star_batch
+                )
+                # pyglet.sprite.Sprite(img=star_image, x=x, y=y, batch=self.star_batch)
+            )
+
+    def update_stars(self, t):
+        for star, t0 in zip(self.stars, self.star_t0):
+            star.opacity = int(
+                255
+                * np.sin(
+                    np.pi * ((t % config.twinkle_period) - t0) / config.twinkle_period
+                )
+                ** 2
+            )
 
     def update_scoreboard(self, t: float):
         if self.time_left is not None:

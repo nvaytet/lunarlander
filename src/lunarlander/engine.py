@@ -255,6 +255,7 @@ class Engine:
         self.check_landing()
         collisions(players=list(self.players.values()))
         self.update_asteroids(t, dt)
+        self.graphics.update_stars(t)
 
         number_of_alive_players = sum(
             not player.dead for player in self.players.values()

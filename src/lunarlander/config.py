@@ -31,3 +31,5 @@ class Config:
         self.asteroid_delay = 5.0
         self.crater_radius = self.avatar_size[0] // 2 - 1
         self.collision_radius = self.avatar_size[0] * 0.5 * np.sqrt(2)
+        self.twinkle_period = 4.0
+        self.nstars = 500
