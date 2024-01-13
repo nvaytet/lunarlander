@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+import hashlib
 from dataclasses import dataclass
 from typing import Optional, Tuple
-import hashlib
 
-from PIL import Image, ImageDraw
 import pyglet
+from PIL import Image, ImageDraw
 
 from . import config
 

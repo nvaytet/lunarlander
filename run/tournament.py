@@ -1,10 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import importlib
 import glob
+import importlib
 
 import supremacy
-
 
 players = {}
 for repo in glob.glob("*_ai.py"):

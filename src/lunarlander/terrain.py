@@ -2,8 +2,8 @@
 from functools import reduce
 
 import numpy as np
-from PIL import Image
 import pyglet
+from PIL import Image
 from scipy.ndimage import gaussian_filter
 
 from . import config

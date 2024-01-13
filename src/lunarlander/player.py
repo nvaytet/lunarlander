@@ -2,20 +2,14 @@
 
 from typing import Optional
 
-from matplotlib.colors import hex2color
 import numpy as np
-from PIL import Image
 import pyglet
+from matplotlib.colors import hex2color
+from PIL import Image
 
 from . import config
-
-from .tools import (
-    Instructions,
-    recenter_image,
-    string_to_color,
-    text_to_raw_image,
-    image_to_sprite,
-)
+from .tools import (Instructions, image_to_sprite, recenter_image,
+                    string_to_color, text_to_raw_image)
 
 
 class Player:

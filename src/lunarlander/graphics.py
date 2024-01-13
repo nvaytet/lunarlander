@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import datetime
-import pyglet
 
 import numpy as np
+import pyglet
 
 from . import config
 from .tools import text_to_image
