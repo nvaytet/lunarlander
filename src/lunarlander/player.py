@@ -8,8 +8,13 @@ from matplotlib.colors import hex2color
 from PIL import Image
 
 from . import config
-from .tools import (Instructions, image_to_sprite, recenter_image,
-                    string_to_color, text_to_raw_image)
+from .tools import (
+    Instructions,
+    image_to_sprite,
+    recenter_image,
+    string_to_color,
+    text_to_raw_image,
+)
 
 
 class Player:
