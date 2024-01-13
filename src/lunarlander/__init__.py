@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+# flake8: noqa
+
 from .config import Config
 
 config = Config()
 
 from .engine import Engine
-from .core import Instructions
+from .tools import Instructions
 
 
 def play(*args, **kwargs):

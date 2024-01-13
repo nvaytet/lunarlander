@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from dataclasses import dataclass
 from typing import Optional, Tuple
 import hashlib
 
@@ -7,6 +8,17 @@ from PIL import Image, ImageDraw
 import pyglet
 
 from . import config
+
+
+@dataclass
+class Instructions:
+    """
+    Instructions for the lander.
+    """
+
+    left: bool = False
+    right: bool = False
+    main: bool = False
 
 
 def text_to_raw_image(text, width, height, font=None):

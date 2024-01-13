@@ -8,9 +8,14 @@ from PIL import Image
 import pyglet
 
 from . import config
-from .core import Instructions
 
-from .tools import recenter_image, string_to_color, text_to_raw_image, image_to_sprite
+from .tools import (
+    Instructions,
+    recenter_image,
+    string_to_color,
+    text_to_raw_image,
+    image_to_sprite,
+)
 
 
 class Player:
@@ -25,6 +30,7 @@ class Player:
         self.team = team
         self.number = number
         self.score = 0
+        self.score_text = None
         self._main_thruster = False
         self._left_thruster = False
         self._right_thruster = False
@@ -47,7 +53,7 @@ class Player:
         main_batch: pyglet.graphics.Batch,
     ):
         # Dark background
-        bkg = pyglet.image.load(config.resources / f"lem-background.png")
+        bkg = pyglet.image.load(config.resources / "lem-background.png")
         self.avatar_background = pyglet.sprite.Sprite(
             img=recenter_image(bkg),
             x=position,
@@ -58,7 +64,7 @@ class Player:
         self.avatar_background.height = config.avatar_size[1]
 
         # Avatar foreground
-        img = Image.open(config.resources / f"lem.png")
+        img = Image.open(config.resources / "lem.png")
         img = img.resize(config.avatar_size).convert("RGBA")
         data = img.getdata()
         array = np.array(data).reshape(img.height, img.width, 4)
@@ -80,7 +86,7 @@ class Player:
         )
 
         # Main flame
-        flame_img = Image.open(config.resources / f"flame.png")
+        flame_img = Image.open(config.resources / "flame.png")
         s = 0.75
         main_flame_img = flame_img.resize(
             (int(config.avatar_size[0] * s), int(config.avatar_size[1] * s))
@@ -202,15 +208,10 @@ class Player:
         return (config.thrust * self.main_thruster * (self.fuel > 0)) * vector
 
     def move(self, dt):
-        # if self.dead:
-        #     return
         acceleration = config.gravity + self.get_thrust()
-
         self.velocity += acceleration * dt
-
         self.x += self.velocity[0] * dt
         self.y += self.velocity[1] * dt
-
         self.x = self.x % config.nx
 
         if self.left_thruster and (self.fuel > 0):
@@ -226,8 +227,8 @@ class Player:
 
     def crash(self, reason):
         self.dead = True
-        x, y = self.x, self.y
-        img = Image.open(config.resources / f"skull.png")
+        # x, y = self.x, self.y
+        img = Image.open(config.resources / "skull.png")
         img = img.resize(config.avatar_size).convert("RGBA")
         data = img.getdata()
         array = np.array(data).reshape(img.height, img.width, 4)
@@ -235,25 +236,18 @@ class Player:
         for i in range(3):
             array[..., i] = int(round(rgb[i] * 255))
 
-        imd = pyglet.image.ImageData(
-            width=img.width,
-            height=img.height,
-            fmt="RGBA",
-            data=Image.fromarray(array.astype(np.uint8)).tobytes(),
-            pitch=-img.width * 4,
-        )
+        av_image = Image.fromarray(array.astype(np.uint8))
         batch = self.avatar.batch
         self.avatar.delete()
-        self.avatar = pyglet.sprite.Sprite(
-            img=recenter_image(imd),
-            x=x,
-            y=y,
+        self.avatar = image_to_sprite(
+            img=av_image,
+            x=self.x,
+            y=self.y,
             batch=batch,
         )
-
         self.score_avatar.delete()
-        self.score_avatar = pyglet.sprite.Sprite(
-            img=recenter_image(imd),
+        self.score_avatar = image_to_sprite(
+            img=av_image,
             x=config.nx + 30,
             y=config.ny - 100 - 75 * self.number,
             batch=batch,
@@ -262,7 +256,18 @@ class Player:
 
     def land(self, time_left, landing_site_width):
         self.dead = True
-        self.score = config.score_landing_bonus
+        score_breakdown = {
+            "landing": config.score_landing_bonus,
+            "site width": config.score_landing_site_bonus
+            * (config.avatar_size[0] / landing_site_width),
+            "time": config.score_time_bonus * (time_left / config.time_limit),
+            "fuel": config.score_fuel_bonus * (self.fuel / config.max_fuel),
+        }
+        self.score = int(round(sum(score_breakdown.values())))
+        print(
+            f"Player {self.team} landed! Score={self.score}: "
+            + ", ".join([f"{k}={v:.1f}" for k, v in score_breakdown.items()])
+        )
 
     def execute_bot_instructions(self, instructions: Optional[Instructions]):
         if instructions is None:

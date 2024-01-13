@@ -19,7 +19,7 @@ class Terrain:
         self.terrain = self.smooth.copy()
         self.landing_sites = np.zeros_like(self.terrain)
 
-        img = Image.open(config.resources / f"lunar-surface.png")
+        img = Image.open(config.resources / "lunar-surface.png")
         if (img.width != config.nx) or (img.height != config.ny):
             img = img.resize((config.nx, config.ny))
         img = img.convert("RGBA")
@@ -32,7 +32,6 @@ class Terrain:
         )
         self.current_background[..., 3] = 255
         self.current_background[:, : config.nx, :] = self.raw_background
-        # self.current_background = self.raw_background.copy()
         self.y_map = np.broadcast_to(
             config.ny - np.arange(config.ny).reshape(config.ny, 1),
             (config.ny, config.nx),
@@ -41,7 +40,7 @@ class Terrain:
         self.update_background(slice(0, config.nx), slice(0, config.ny))
 
         # Add Earth rise
-        earth = Image.open(config.resources / f"earth.png").convert("RGBA")
+        earth = Image.open(config.resources / "earth.png").convert("RGBA")
         earth_data = earth.getdata()
         earth_array = (
             np.array(earth_data).reshape(earth.height, earth.width, 4).astype(np.uint8)
@@ -56,14 +55,13 @@ class Terrain:
         self.background_image = self.terrain_to_image()
 
     def update_background(self, xslice: slice, yslice: slice) -> None:
-        # sl = slice(start, end)
         raw = self.raw_background[yslice, xslice]
         mask = (self.y_map[yslice, xslice] < self.terrain[xslice]).astype(int)
         mask = mask.reshape(mask.shape + (1,))
         self.current_background[yslice, xslice] = raw * mask
 
-    def make_crater(self, x: int) -> None:
-        r = config.crater_radius
+    def make_crater(self, x: int, scaling: float = 1.0) -> None:
+        r = int(round(config.crater_radius * scaling))
         slices = []
         start = x - r
         end = x + r
@@ -74,9 +72,7 @@ class Terrain:
             slices.append(slice(None, end - config.nx))
             end = config.nx
         slices.append(slice(start, end))
-        # y_val = float(self.terrain[x])  # make a copy
         y_val = reduce(min, [self.terrain[sl].min() for sl in slices])
-        # print("y_val, self.terrain[x]", y_val, self.terrain[x])
         yslice = slice(200, config.ny - int(y_val))
         for xslice in slices:
             self.terrain[xslice] = float(self.terrain[x])

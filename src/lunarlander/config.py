@@ -13,7 +13,6 @@ class Config:
         self.resources = ir.files("lunarlander") / "resources"
         self.avatar_size = (25, 25)
         file = font_manager.findfont("sans")
-        self.small_font = ImageFont.truetype(file, size=10)
         self.large_font = ImageFont.truetype(file, size=16)
         self.medium_font = ImageFont.truetype(file, size=12)
         self.nx = 1920 - self.scoreboard_width
@@ -25,7 +24,7 @@ class Config:
         self.rotation_speed = 15.0
         self.max_landing_speed = 5.0
         self.max_landing_angle = 5.0
-        self.max_fuel = 3000
+        self.max_fuel = 1000
         self.main_engine_burn_rate = 5
         self.rotation_engine_burn_rate = 2
         self.asteroid_delay = 5.0
@@ -33,7 +32,7 @@ class Config:
         self.collision_radius = self.avatar_size[0] * 0.5 * np.sqrt(2)
         self.twinkle_period = 4.0
         self.nstars = 500
-        self.score_time_bonus = 100
-        self.score_fuel_bonus = 100
-        self.score_landing_site_bonus = 1000
+        self.score_time_bonus = 10
+        self.score_fuel_bonus = 10
+        self.score_landing_site_bonus = 15
         self.score_landing_bonus = 10

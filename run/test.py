@@ -16,52 +16,10 @@ for repo in glob.glob("*_bot"):
 # bots.append(extra_bot)
 
 start = None
-# start = vg.Location(longitude=-68.004373, latitude=18.180470)
 
 lunarlander.play(
-    bots=bots,  # [1:2],  # List of bots to use
+    bots=bots,  # List of bots to use
     manual=True,  # Set to True to play manually
+    crater_scaling=1.0,  # Artificially increase the size of craters
+    test=False,
 )
-
-
-# # SPDX-License-Identifier: BSD-3-Clause
-
-# # import simple_ai
-
-# # import my_ai
-
-# from dataclasses import dataclass
-
-
-# # names = [
-# #     "John",
-# #     "Dave",
-# #     "Anna",
-# #     "Greg",
-# #     "Lisa",
-# #     "Simon",
-# #     "Tobias",
-# #     "Isobel",
-# #     "Oliver",
-# # ]
-
-# # players = {name: simple_ai for name in names}
-# # # players[my_ai.CREATOR] = my_ai
-
-
-# @dataclass
-# class Bot:
-#     team: str
-
-
-# bots = [Bot("neil")]
-
-# lunarlander.start(
-#     bots=bots,
-#     manual=True,
-#     # time_limit=8 * 60,  # Time limit in seconds
-#     # fullscreen=False,  # Set to True for fullscreen
-#     # seed=None,  # Set seed to always generate the same map
-#     # high_contrast=False,  # Set to True for high contrast mode
-#     # crystal_boost=1,  # Set to > 1 to artificially increase crystal production
-# )

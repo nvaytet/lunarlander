@@ -9,8 +9,9 @@ from . import config
 from .asteroid import Asteroid
 from .graphics import Graphics
 from .player import Player
-from .scores import read_scores
+from .scores import finalize_scores
 from .terrain import Terrain
+from .tools import Instructions
 
 
 def add_key_actions(window, player):
@@ -41,11 +42,11 @@ class Engine:
         self,
         bots,
         safe=False,
-        # high_contrast=False,
         test=True,
         seed=None,
         fullscreen=False,
         manual=False,
+        crater_scaling=1.0,
     ):
         if seed is not None:
             np.random.seed(seed)
@@ -53,22 +54,19 @@ class Engine:
         self.nx = config.nx
         self.ny = config.ny
         self.start_time = None
-        self._manual = manual
+        self._test = test
         self.asteroids = []
-        # self.scores = self.read_scores(players=players, test=test)
-        # self.high_contrast = high_contrast
         self.safe = safe
         self.exiting = False
         self.time_of_last_scoreboard_update = 0
         self.time_of_last_asteroid = 0
+        self._crater_scaling = crater_scaling
 
         self.game_map = Terrain()
         self.graphics = Graphics(game_map=self.game_map, fullscreen=fullscreen)
 
         self.bots = {bot.team: bot for bot in bots}
-
         starting_positions = self.make_starting_positions(nplayers=len(self.bots))
-
         self.players = {}
         for i, (name, pos) in enumerate(zip(self.bots, starting_positions)):
             self.players[name] = Player(
@@ -79,29 +77,15 @@ class Engine:
                 main_batch=self.graphics.main_batch,
             )
 
-        self.scores = read_scores(players=self.players, test=test)
-
-        if self._manual:
-            add_key_actions(
-                window=self.graphics.window, player=list(self.players.values())[0]
-            )
+        if manual:
+            manual_player = list(self.players.values())[0]
+            self._manual = manual_player.team
+            add_key_actions(window=self.graphics.window, player=manual_player)
+        else:
+            self._manual = None
 
         pyglet.clock.schedule_interval(self.update, 1 / config.fps)
         pyglet.app.run()
-
-    # def read_scores(self, players: dict, test: bool) -> Dict[str, int]:
-    #     scores = {}
-    #     fname = "scores.txt"
-    #     if os.path.exists(fname) and (not test):
-    #         with open(fname, "r") as f:
-    #             contents = f.readlines()
-    #         for line in contents:
-    #             name, score = line.split(":")
-    #             scores[name] = int(score.strip())
-    #     else:
-    #         scores = {p: 0 for p in players}
-    #     print("Scores:", scores)
-    #     return scores
 
     def make_starting_positions(self, nplayers: int) -> list:
         random_origin = np.random.uniform(0, config.nx)
@@ -110,30 +94,13 @@ class Engine:
 
     def exit(self, message: str):
         self.exiting = True
-        self.exit_time = time.time() + 1
         print(message)
-        # score_left = len(self.dead_players)
-        # for name, p in self.players.items():
-        #     if not p.dead:
-        #         p.update_score(score_left)
-        # self.make_player_avatars()
-        # sorted_scores = [
-        #     (p.team, p.global_score)
-        #     for p in sorted(
-        #         self.players.values(), key=lambda x: x.global_score, reverse=True
-        #     )
-        # ]
-        # fname = "scores.txt"
-        # with open(fname, "w") as f:
-        #     for name, p in self.players.items():
-        #         f.write(f"{name}: {p.global_score}\n")
-        # for i, (name, score) in enumerate(sorted_scores):
-        #     print(f"{i + 1}. {name}: {score}")
+        finalize_scores(players=self.players, test=self._test)
 
     def undead_players(self):
         return (p for p in self.players.values() if not p.dead)
 
-    def execute_player_bot(self, player, t: float, dt: float):
+    def execute_player_bot(self, player, t: float, dt: float) -> Instructions:
         instructions = None
         args = {
             "t": t,
@@ -156,8 +123,7 @@ class Engine:
         return instructions
 
     def call_player_bots(self, t: float, dt: float):
-        players = list(self.undead_players())
-        for player in players[int(self._manual) :]:
+        for player in (p for p in self.undead_players() if p.team != self._manual):
             if self.safe:
                 try:
                     player.execute_bot_instructions(
@@ -176,37 +142,34 @@ class Engine:
 
     def check_landing(self, t: float):
         for player in self.undead_players():
-            # if (not player.dead) and (player.y < config.ny - 1):
-            # if (not player.dead) and (player.y < config.ny - 1):
             lem_floor = int(player.y - config.avatar_size[1] / 2)
             y_values = self.game_map.terrain[
-                # int(player.y - config.avatar_size[1] / 2),
                 int(player.x - config.avatar_size[0] / 2) : int(
                     player.x + config.avatar_size[0] / 2
                 ),
             ]
             if any(y_values >= lem_floor):
-                print("speed", np.linalg.norm(player.velocity))
-                print("angle", player.heading)
-                # uneven_terrain = any(pixels == 0)
                 uneven_terrain = any(y_values < lem_floor)
                 too_fast = np.linalg.norm(player.velocity) > config.max_landing_speed
-                # landing_angle = np.abs(((player.heading + 180) % 360) - 180)
                 landing_angle = np.abs(player.heading)
                 bad_angle = landing_angle > config.max_landing_angle
                 if any([uneven_terrain, too_fast, bad_angle]):
                     reason = []
                     if uneven_terrain:
-                        print(y_values, lem_floor)
                         reason.append("uneven terrain")
                     if too_fast:
-                        reason.append(f"velocity={player.velocity}")
+                        reason.append(
+                            f"velocity=[{player.velocity[0]:.1f}, "
+                            f"{player.velocity[1]:.1f}]"
+                        )
                     if bad_angle:
-                        reason.append(f"landing angle={landing_angle}")
+                        reason.append(f"landing angle={landing_angle:.1f}")
                     player.crash(reason=", ".join(reason))
                 else:
-                    player.land(t)
-                    print(f"Player {player.team} landed!")
+                    player.land(
+                        time_left=config.time_limit - t,
+                        landing_site_width=self.game_map.landing_sites[int(player.x)],
+                    )
 
     def compute_collisions(self):
         players = list(self.undead_players())
@@ -259,7 +222,7 @@ class Engine:
                     if d < tip_size:
                         player.crash(reason="asteroid collision")
             if tip[1] <= self.game_map.terrain[int(tip[0])]:
-                self.game_map.make_crater(x=int(tip[0]))
+                self.game_map.make_crater(x=int(tip[0]), scaling=self._crater_scaling)
                 asteroid.avatar.delete()
                 self.asteroids.remove(asteroid)
 
@@ -282,7 +245,6 @@ class Engine:
             self.graphics.update_scoreboard(t=config.time_limit - t)
             for player in [p for p in self.players.values() if not p.dead]:
                 player.update_scoreboard(batch=self.graphics.main_batch)
-        # if True:  # not self._manual:
         self.call_player_bots(t, dt)
         self.move_players(dt=dt)
         self.check_landing(t=t)

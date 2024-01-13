@@ -2,7 +2,6 @@
 
 import uuid
 import numpy as np
-from PIL import Image
 import pyglet
 
 from . import config
@@ -26,7 +25,7 @@ class Asteroid:
         self.make_avatar(x, y, batch)
 
     def make_avatar(self, x, y, batch):
-        img = pyglet.image.load(config.resources / f"asteroid.png")
+        img = pyglet.image.load(config.resources / "asteroid.png")
         self.avatar = pyglet.sprite.Sprite(
             img=recenter_image(img),
             x=x,

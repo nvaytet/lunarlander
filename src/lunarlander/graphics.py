@@ -44,7 +44,6 @@ class Graphics:
             self.main_batch.draw()
 
     def make_stars(self):
-        # star_image = pyglet.image.load(config.resources / f"star.png")
         self.stars = []
         self.star_t0 = np.random.uniform(0, config.twinkle_period, config.nstars)
         xstar = np.random.uniform(0, config.nx, config.nstars)
@@ -54,7 +53,6 @@ class Graphics:
                 pyglet.shapes.Circle(
                     x, y, 1, color=(255, 255, 255, 255), batch=self.star_batch
                 )
-                # pyglet.sprite.Sprite(img=star_image, x=x, y=y, batch=self.star_batch)
             )
 
     def update_stars(self, t):
