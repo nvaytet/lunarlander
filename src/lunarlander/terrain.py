@@ -17,7 +17,7 @@ class Terrain:
         profile[xseed] = 10000 * np.random.random(nseeds)
         self.smooth = gaussian_filter(profile, sigma=30, mode="wrap")
         self.terrain = self.smooth.copy()
-        self.differential = np.diff(self.terrain)
+        self.landing_sites = np.zeros_like(self.terrain)
 
         img = Image.open(config.resources / f"lunar-surface.png")
         if (img.width != config.nx) or (img.height != config.ny):
@@ -82,7 +82,22 @@ class Terrain:
             self.terrain[xslice] = float(self.terrain[x])
             self.update_background(xslice, yslice)
         self.background_image = self.terrain_to_image()
-        self.differential = np.diff(self.terrain)
+        self.update_landing_sites()
+
+    def update_landing_sites(self):
+        # Find largest landing site
+        n = len(self.terrain)
+        # Find run starts
+        loc_run_start = np.empty(n, dtype=bool)
+        loc_run_start[0] = True
+        np.not_equal(self.terrain[:-1], self.terrain[1:], out=loc_run_start[1:])
+        run_starts = np.nonzero(loc_run_start)[0]
+
+        # Find run lengths
+        run_lengths = np.diff(np.append(run_starts, n))
+
+        for start, length in zip(run_starts, run_lengths):
+            self.landing_sites[start : start + length] = length
 
     def terrain_to_image(self) -> Image:
         img = Image.fromarray(self.current_background)
