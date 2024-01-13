@@ -72,7 +72,11 @@ class Engine:
         self.players = {}
         for i, (name, pos) in enumerate(zip(self.bots, starting_positions)):
             self.players[name] = Player(
-                team=name, number=i, position=pos, batch=self.graphics.main_batch
+                team=name,
+                number=i,
+                position=pos,
+                back_batch=self.graphics.background_batch,
+                main_batch=self.graphics.main_batch,
             )
 
         if self._manual:
@@ -247,13 +251,13 @@ class Engine:
         if abs(t - self.time_of_last_scoreboard_update) > 0.3:
             self.time_of_last_scoreboard_update = t
             self.graphics.update_scoreboard(t=config.time_limit - t)
-            for player in self.players.values():
+            for player in [p for p in self.players.values() if not p.dead]:
                 player.update_scoreboard(batch=self.graphics.main_batch)
         # if True:  # not self._manual:
         self.call_player_bots(t, dt)
         self.move(dt=dt)
         self.check_landing()
-        collisions(players=list(self.players.values()))
+        collisions(players=[p for p in self.players.values() if not p.dead])
         self.update_asteroids(t, dt)
         self.graphics.update_stars(t)
 

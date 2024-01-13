@@ -19,7 +19,8 @@ class Player:
         number: int,
         team: str,
         position: float,
-        batch: pyglet.graphics.Batch,
+        back_batch: pyglet.graphics.Batch,
+        main_batch: pyglet.graphics.Batch,
     ):
         self.team = team
         self.number = number
@@ -33,11 +34,19 @@ class Player:
         self._rotate_left = False
         self._rotate_right = False
         self.color = string_to_color(team)
-        self.make_avatar(position=position, batch=batch)
+        self.make_avatar(
+            position=position, back_batch=back_batch, main_batch=main_batch
+        )
         self.heading = 90
         self.dead = False
 
-    def make_avatar(self, position, batch):
+    def make_avatar(
+        self,
+        position: float,
+        back_batch: pyglet.graphics.Batch,
+        main_batch: pyglet.graphics.Batch,
+    ):
+        bkg = pyglet.image.load(config.resources / f"lem-background.png")
         img = Image.open(config.resources / f"lem.png")
         img = img.resize(config.avatar_size).convert("RGBA")
         data = img.getdata()
@@ -56,17 +65,26 @@ class Player:
             data=Image.fromarray(array.astype(np.uint8)).tobytes(),
             pitch=-img.width * 4,
         )
+        self.avatar_background = pyglet.sprite.Sprite(
+            img=recenter_image(bkg),
+            x=position,
+            y=config.ny - 100,
+            batch=back_batch,
+        )
+        self.avatar_background.width = config.avatar_size[0]
+        self.avatar_background.height = config.avatar_size[1]
+
         self.avatar = pyglet.sprite.Sprite(
             img=recenter_image(imd),
             x=position,
             y=config.ny - 100,
-            batch=batch,
+            batch=main_batch,
         )
         self.score_avatar = pyglet.sprite.Sprite(
             img=recenter_image(imd),
             x=config.nx + 30,
             y=config.ny - 100 - 75 * self.number,
-            batch=batch,
+            batch=main_batch,
         )
 
         # Main flame
@@ -88,7 +106,7 @@ class Player:
             img=imd,
             x=self.avatar.x,
             y=self.avatar.y,
-            batch=batch,
+            batch=main_batch,
         )
         self.main_flame.opacity = 0
 
@@ -110,7 +128,7 @@ class Player:
             img=imd,
             x=self.avatar.x,
             y=self.avatar.y,
-            batch=batch,
+            batch=main_batch,
         )
         self.left_flame.opacity = 0
 
@@ -131,7 +149,7 @@ class Player:
             img=imd,
             x=self.avatar.x,
             y=self.avatar.y,
-            batch=batch,
+            batch=main_batch,
         )
         self.right_flame.opacity = 0
 
@@ -142,6 +160,7 @@ class Player:
     @x.setter
     def x(self, value):
         self.avatar.x = value
+        self.avatar_background.x = value
         self.main_flame.x = value
         self.left_flame.x = value
         self.right_flame.x = value
@@ -153,6 +172,7 @@ class Player:
     @y.setter
     def y(self, value):
         self.avatar.y = value
+        self.avatar_background.y = value
         self.main_flame.y = value
         self.left_flame.y = value
         self.right_flame.y = value

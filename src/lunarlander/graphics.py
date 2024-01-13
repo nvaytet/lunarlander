@@ -21,6 +21,7 @@ class Graphics:
 
         self.game_map = game_map
         self.star_batch = pyglet.graphics.Batch()
+        self.background_batch = pyglet.graphics.Batch()
         self.main_batch = pyglet.graphics.Batch()
         self.time_label = pyglet.sprite.Sprite(
             img=text_to_image(
@@ -39,6 +40,7 @@ class Graphics:
             self.window.clear()
             self.game_map.background_image.get_texture().blit(0, 0)
             self.star_batch.draw()
+            self.background_batch.draw()
             self.main_batch.draw()
 
     def make_stars(self):
@@ -46,7 +48,7 @@ class Graphics:
         self.stars = []
         self.star_t0 = np.random.uniform(0, config.twinkle_period, config.nstars)
         xstar = np.random.uniform(0, config.nx, config.nstars)
-        ystar = np.random.uniform(500, config.ny, config.nstars)
+        ystar = np.random.uniform(0, config.ny, config.nstars)
         for x, y in zip(xstar, ystar):
             self.stars.append(
                 pyglet.shapes.Circle(

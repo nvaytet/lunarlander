@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
+from functools import reduce
 
 import numpy as np
 from PIL import Image
@@ -72,10 +73,12 @@ class Terrain:
             slices.append(slice(None, end - config.nx))
             end = config.nx
         slices.append(slice(start, end))
-        y_val = self.terrain[x]
-        yslice = slice(int(y_val), None)
+        # y_val = float(self.terrain[x])  # make a copy
+        y_val = reduce(min, [self.terrain[sl].min() for sl in slices])
+        # print("y_val, self.terrain[x]", y_val, self.terrain[x])
+        yslice = slice(200, config.ny - int(y_val))
         for xslice in slices:
-            self.terrain[xslice] = y_val  # float(self.terrain[x])
+            self.terrain[xslice] = float(self.terrain[x])
             self.update_background(xslice, yslice)
         self.background_image = self.terrain_to_image()
 
