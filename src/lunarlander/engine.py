@@ -100,40 +100,36 @@ class Engine:
     def undead_players(self):
         return (p for p in self.players.values() if not p.dead)
 
-    def execute_player_bot(self, player, t: float, dt: float) -> Instructions:
+    def generate_info(self, t, dt):
+        info = {"t": t, "dt": dt, "terrain": self.game_map.terrain}
+        info["players"] = {team: p.to_dict() for team, p in self.players.items()}
+        info["asteroids"] = [a.to_dict() for a in self.asteroids]
+        return info
+
+    def execute_player_bot(self, team: str, info: dict) -> Instructions:
         instructions = None
-        args = {
-            "t": t,
-            "dt": dt,
-            "x": player.x,
-            "y": player.y,
-            "heading": player.heading,
-            "vx": player.velocity[0],
-            "vy": player.velocity[1],
-            "fuel": player.fuel,
-            "terrain": self.game_map.terrain,
-        }
         if self.safe:
             try:
-                instructions = self.bots[player.team].run(**args)
+                instructions = self.bots[team].run(**info)
             except:  # noqa
                 pass
         else:
-            instructions = self.bots[player.team].run(**args)
+            instructions = self.bots[team].run(**info)
         return instructions
 
     def call_player_bots(self, t: float, dt: float):
+        info = self.generate_info(t=t, dt=dt)
         for player in (p for p in self.undead_players() if p.team != self._manual):
             if self.safe:
                 try:
                     player.execute_bot_instructions(
-                        self.execute_player_bot(player=player, t=t, dt=dt)
+                        self.execute_player_bot(team=player.team, info=info)
                     )
                 except:  # noqa
                     pass
             else:
                 player.execute_bot_instructions(
-                    self.execute_player_bot(player=player, t=t, dt=dt)
+                    self.execute_player_bot(team=player.team, info=info)
                 )
 
     def move_players(self, dt: float):
@@ -215,7 +211,7 @@ class Engine:
         for asteroid in self.asteroids:
             asteroid.move(dt=dt)
             tip = asteroid.tip()
-            tip_size = asteroid.size * 0.2
+            tip_size = asteroid.size * config.asteroid_tip_size
             for player in self.players.values():
                 if not player.dead:
                     d = np.sqrt((player.x - tip[0]) ** 2 + (player.y - tip[1]) ** 2)

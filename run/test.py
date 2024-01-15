@@ -17,8 +17,8 @@ for repo in glob.glob("*_bot"):
 start = None
 
 lunarlander.play(
-    bots=bots,  # List of bots to use
-    manual=True,  # Set to True to play manually
+    bots=bots[1:],  # List of bots to use
+    manual=False,  # Set to True to play manually
     crater_scaling=1.0,  # Artificially increase the size of craters
     test=False,
 )

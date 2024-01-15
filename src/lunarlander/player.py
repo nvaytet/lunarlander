@@ -303,3 +303,14 @@ class Player:
             batch=batch,
             recenter=False,
         )
+
+    def to_dict(self):
+        return {
+            "team": self.team,
+            "score": self.score,
+            "position": self.position,
+            "velocity": self.velocity,
+            "heading": self.heading,
+            "fuel": self.fuel,
+            "dead": self.dead,
+        }

@@ -53,12 +53,30 @@ class Asteroid:
     def y(self, value):
         self.avatar.y = value
 
+    def velocity_vector(self):
+        return (
+            self.v * np.cos(np.radians(self.heading)),
+            self.v * np.sin(np.radians(self.heading)),
+        )
+
     def move(self, dt):
-        self.x += self.v * np.cos(np.radians(self.heading)) * dt
-        self.y += self.v * np.sin(np.radians(self.heading)) * dt
+        vx, vy = self.velocity_vector()
+        self.x += vx * dt
+        self.y += vy * dt
         self.x = self.x % config.nx
 
     def tip(self):
         tipx = self.x + self.size * np.cos(np.radians(self.heading)) / 2
         tipy = self.y + self.size * np.sin(np.radians(self.heading)) / 2
         return tipx % config.nx, tipy
+
+    def to_dict(self):
+        x, y = self.tip()
+        return {
+            "id": self.id,
+            "x": x,
+            "y": y,
+            "v": self.velocity_vector(),
+            "heading": self.heading,
+            "size": self.size * config.asteroid_tip_size,
+        }

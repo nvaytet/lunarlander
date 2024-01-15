@@ -28,11 +28,12 @@ class Config:
         self.main_engine_burn_rate = 5
         self.rotation_engine_burn_rate = 2
         self.asteroid_delay = 5.0
+        self.asteroid_tip_size = 0.2
         self.crater_radius = self.avatar_size[0] // 2 - 1
         self.collision_radius = self.avatar_size[0] * 0.5 * np.sqrt(2)
         self.twinkle_period = 4.0
         self.nstars = 500
-        self.score_time_bonus = 10
-        self.score_fuel_bonus = 10
-        self.score_landing_site_bonus = 15
-        self.score_landing_bonus = 10
+        self.score_time_bonus = 5
+        self.score_fuel_bonus = 5
+        self.score_landing_site_bonus = 8
+        self.score_landing_bonus = 5
