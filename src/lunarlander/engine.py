@@ -11,7 +11,7 @@ from .graphics import Graphics
 from .player import Player
 from .scores import finalize_scores
 from .terrain import Terrain
-from .tools import Instructions
+from .tools import AsteroidInfo, Instructions, PlayerInfo
 
 
 def add_key_actions(window, player):
@@ -72,11 +72,13 @@ class Engine:
         self.bots = {bot.team: bot for bot in bots}
         starting_positions = self.make_starting_positions(nplayers=len(self.bots))
         self.players = {}
-        for i, (name, pos) in enumerate(zip(self.bots, starting_positions)):
-            self.players[name] = Player(
-                team=name,
+        for i, (bot, pos) in enumerate(zip(self.bots.values(), starting_positions)):
+            team = bot.team
+            self.players[team] = Player(
+                team=team,
                 number=i,
                 position=pos,
+                avatar=getattr(bot, "avatar", 0),
                 back_batch=self.graphics.background_batch,
                 main_batch=self.graphics.main_batch,
             )
@@ -101,13 +103,15 @@ class Engine:
         print(message)
         finalize_scores(players=self.players, test=self._test)
 
-    def undead_players(self):
-        return (p for p in self.players.values() if not p.dead)
+    def active_players(self):
+        return (p for p in self.players.values() if (not p.dead) and (not p.landed))
 
     def generate_info(self, t, dt):
         info = {"t": t, "dt": dt, "terrain": self.game_map.terrain}
-        info["players"] = {team: p.to_dict() for team, p in self.players.items()}
-        info["asteroids"] = [a.to_dict() for a in self.asteroids]
+        info["players"] = {
+            team: PlayerInfo(**p.to_dict()) for team, p in self.players.items()
+        }
+        info["asteroids"] = [AsteroidInfo(**a.to_dict()) for a in self.asteroids]
         return info
 
     def execute_player_bot(self, team: str, info: dict) -> Instructions:
@@ -123,7 +127,7 @@ class Engine:
 
     def call_player_bots(self, t: float, dt: float):
         info = self.generate_info(t=t, dt=dt)
-        for player in (p for p in self.undead_players() if p.team != self._manual):
+        for player in (p for p in self.active_players() if p.team != self._manual):
             if self.safe:
                 try:
                     player.execute_bot_instructions(
@@ -137,11 +141,11 @@ class Engine:
                 )
 
     def move_players(self, dt: float):
-        for player in self.undead_players():
+        for player in self.active_players():
             player.move(dt=dt * 2)
 
     def check_landing(self, t: float):
-        for player in self.undead_players():
+        for player in self.active_players():
             lem_floor = int(player.y - config.avatar_size[1] / 2)
             y_values = self.game_map.terrain[
                 int(player.x - config.avatar_size[0] / 2) : int(
@@ -173,7 +177,7 @@ class Engine:
                     )
 
     def compute_collisions(self):
-        players = list(self.undead_players())
+        players = list(self.active_players())
         n = len(players)
         x = np.array([p.x for p in players])
         y = np.array([p.y for p in players])
@@ -218,11 +222,10 @@ class Engine:
             tip = asteroid.tip()
             tip_size = asteroid.size * config.asteroid_tip_size
             if self._asteroid_collisions:
-                for player in self.players.values():
-                    if not player.dead:
-                        d = np.sqrt((player.x - tip[0]) ** 2 + (player.y - tip[1]) ** 2)
-                        if d < tip_size:
-                            player.crash(reason="asteroid collision")
+                for player in self.active_players():
+                    d = np.sqrt((player.x - tip[0]) ** 2 + (player.y - tip[1]) ** 2)
+                    if d < tip_size:
+                        player.crash(reason="asteroid collision")
             if tip[1] <= self.game_map.terrain[int(tip[0])]:
                 self.game_map.make_crater(x=int(tip[0]), scaling=self._crater_scaling)
                 asteroid.avatar.delete()
@@ -255,10 +258,7 @@ class Engine:
         self.update_asteroids(t, dt)
         self.graphics.update_stars(t)
 
-        number_of_alive_players = sum(
-            not player.dead for player in self.players.values()
-        )
-        if number_of_alive_players == 0:
+        if len(list(self.active_players())) == 0:
             self.exit(message="All players have either crashed or landed!")
 
         return

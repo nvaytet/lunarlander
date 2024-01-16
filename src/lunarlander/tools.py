@@ -29,8 +29,8 @@ class PlayerInfo:
 
     team: str
     score: int
-    position: Tuple(float, float)
-    velocity: Tuple(float, float)
+    position: Tuple[float, float]
+    velocity: Tuple[float, float]
     heading: float
     fuel: float
     dead: bool
@@ -45,13 +45,11 @@ class AsteroidInfo:
     Information about an asteroid.
     """
 
-    team: str
-    score: int
-    position: Tuple(float, float)
-    velocity: Tuple(float, float)
+    id: str
+    position: Tuple[float, float]
+    velocity: Tuple[float, float]
     heading: float
-    fuel: float
-    dead: bool
+    size: float
 
     def __getitem__(self, key):
         return getattr(self, key)

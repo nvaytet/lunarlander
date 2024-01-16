@@ -74,9 +74,8 @@ class Asteroid:
         x, y = self.tip()
         return {
             "id": self.id,
-            "x": x,
-            "y": y,
-            "v": self.velocity_vector(),
+            "position": (x, y),
+            "velocity": self.velocity_vector(),
             "heading": self.heading,
             "size": self.size * config.asteroid_tip_size,
         }

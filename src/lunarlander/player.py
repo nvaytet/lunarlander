@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 import pyglet
@@ -8,8 +8,13 @@ from matplotlib.colors import hex2color
 from PIL import Image
 
 from . import config
-from .tools import (Instructions, image_to_sprite, recenter_image,
-                    string_to_color, text_to_raw_image)
+from .tools import (
+    Instructions,
+    image_to_sprite,
+    recenter_image,
+    string_to_color,
+    text_to_raw_image,
+)
 
 
 class Player:
@@ -17,6 +22,7 @@ class Player:
         self,
         number: int,
         team: str,
+        avatar: Union[int, str],
         position: float,
         back_batch: pyglet.graphics.Batch,
         main_batch: pyglet.graphics.Batch,
@@ -35,13 +41,18 @@ class Player:
         self._rotate_right = False
         self.color = string_to_color(team)
         self.make_avatar(
-            position=position, back_batch=back_batch, main_batch=main_batch
+            avatar=avatar,
+            position=position,
+            back_batch=back_batch,
+            main_batch=main_batch,
         )
         self.heading = 90
         self.dead = False
+        self.landed = False
 
     def make_avatar(
         self,
+        avatar: Union[int, str],
         position: float,
         back_batch: pyglet.graphics.Batch,
         main_batch: pyglet.graphics.Batch,
@@ -58,22 +69,25 @@ class Player:
         self.avatar_background.height = config.avatar_size[1]
 
         # Avatar foreground
-        img = Image.open(config.resources / "lem.png")
-        img = img.resize(config.avatar_size).convert("RGBA")
-        data = img.getdata()
-        array = np.array(data).reshape(img.height, img.width, 4)
-        rgb = hex2color(self.color)
-        for i in range(3):
-            array[..., i] = int(round(rgb[i] * 255))
-        av_image = Image.fromarray(array.astype(np.uint8))
+        if isinstance(avatar, str):
+            img = Image.open(avatar).resize(config.avatar_size).convert("RGBA")
+        else:
+            img = Image.open(config.resources / "avatars" / f"{avatar}.png")
+            img = img.resize(config.avatar_size).convert("RGBA")
+            data = img.getdata()
+            array = np.array(data).reshape(img.height, img.width, 4)
+            rgb = hex2color(self.color)
+            for i in range(3):
+                array[..., i] = int(round(rgb[i] * 255))
+            img = Image.fromarray(array.astype(np.uint8))
         self.avatar = image_to_sprite(
-            img=av_image,
+            img=img,
             x=position,
             y=config.ny - 100,
             batch=main_batch,
         )
         self.score_avatar = image_to_sprite(
-            img=av_image,
+            img=img,
             x=config.nx + 30,
             y=config.ny - 100 - 75 * self.number,
             batch=main_batch,
@@ -251,7 +265,7 @@ class Player:
     def land(
         self, time_left: float, landing_site_width: int, flag: Optional[str] = None
     ):
-        self.dead = True
+        self.landed = True
         score_breakdown = {
             "landing": config.score_landing_bonus,
             "site width": config.score_landing_site_bonus
@@ -326,8 +340,8 @@ class Player:
         return {
             "team": self.team,
             "score": self.score,
-            "position": self.position,
-            "velocity": self.velocity,
+            "position": (self.position[0], self.position[1]),
+            "velocity": (self.velocity[0], self.velocity[1]),
             "heading": self.heading,
             "fuel": self.fuel,
             "dead": self.dead,
