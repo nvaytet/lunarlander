@@ -17,7 +17,7 @@ for repo in glob.glob("*_bot"):
 lunarlander.play(
     bots=bots,  # List of bots to use
     manual=False,  # Set to True to play manually using the keyboard arrow keys
-    crater_scaling=2.0,  # Artificially increase the size of craters
+    crater_scaling=1.0,  # Artificially increase the size of craters
     player_collisions=True,  # Set to False to disable collisions between players
     asteroid_collisions=False,  # Set to False to disable being destroyed by asteroids
     test=True,  # Set to True to run in test mode

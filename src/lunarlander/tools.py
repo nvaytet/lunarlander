@@ -21,6 +21,42 @@ class Instructions:
     main: bool = False
 
 
+@dataclass(frozen=True)
+class PlayerInfo:
+    """
+    Information about a player.
+    """
+
+    team: str
+    score: int
+    position: Tuple(float, float)
+    velocity: Tuple(float, float)
+    heading: float
+    fuel: float
+    dead: bool
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+
+@dataclass(frozen=True)
+class AsteroidInfo:
+    """
+    Information about an asteroid.
+    """
+
+    team: str
+    score: int
+    position: Tuple(float, float)
+    velocity: Tuple(float, float)
+    heading: float
+    fuel: float
+    dead: bool
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+
 def text_to_raw_image(text, width, height, font=None):
     if font is None:
         font = config.large_font
