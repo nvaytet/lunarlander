@@ -14,8 +14,6 @@ for repo in glob.glob("*_bot"):
 # extra_bot.team = "Andrew"
 # bots.append(extra_bot)
 
-start = None
-
 lunarlander.play(
     bots=bots,  # List of bots to use
     manual=False,  # Set to True to play manually using the keyboard arrow keys

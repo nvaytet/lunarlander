@@ -19,8 +19,7 @@ class Config:
         self.ny = 1080
         self.time_limit = 60 * 5
         self.gravity = np.array([0, -1.62])  # m/s^2
-        self.lem_mass = 1  # kg
-        self.thrust = np.abs(self.gravity[1]) * 3  # N
+        self.thrust = np.abs(self.gravity[1]) * 3  # m/s^2
         self.rotation_speed = 15.0
         self.max_landing_speed = 5.0
         self.max_landing_angle = 5.0
