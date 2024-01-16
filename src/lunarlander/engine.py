@@ -173,7 +173,7 @@ class Engine:
                     player.land(
                         time_left=config.time_limit - t,
                         landing_site_width=self.game_map.landing_sites[int(player.x)],
-                        flag=self.bots[player.team].flag,
+                        flag=getattr(self.bots[player.team], 'flag', None),
                     )
 
     def compute_collisions(self):

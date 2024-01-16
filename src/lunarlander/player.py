@@ -278,27 +278,28 @@ class Player:
             f"Player {self.team} landed! Score={self.score}: "
             + ", ".join([f"{k}={v:.1f}" for k, v in score_breakdown.items()])
         )
-        img = Image.open(config.resources / "flags" / f"{flag}.png")
-        width = int(config.avatar_size[0] / 1.5)
-        height = int(width * (img.height / img.width))
-        img = img.resize((width, height)).convert("RGBA")
-        dx = config.avatar_size[0] // 5
+        if flag is not None:
+            img = Image.open(config.resources / "flags" / f"{flag}.png")
+            width = int(config.avatar_size[0] / 1.5)
+            height = int(width * (img.height / img.width))
+            img = img.resize((width, height)).convert("RGBA")
+            dx = config.avatar_size[0] // 5
 
-        batch = self.avatar.batch
-        self.flag = image_to_sprite(
-            img=img,
-            x=self.avatar.x + dx,
-            y=self.avatar.y + dx,
-            batch=batch,
-            recenter=False,
-        )
-        self.score_flag = image_to_sprite(
-            img=img,
-            x=self.score_avatar.x + dx,
-            y=self.score_avatar.y + dx,
-            batch=batch,
-            recenter=False,
-        )
+            batch = self.avatar.batch
+            self.flag = image_to_sprite(
+                img=img,
+                x=self.avatar.x + dx,
+                y=self.avatar.y + dx,
+                batch=batch,
+                recenter=False,
+            )
+            self.score_flag = image_to_sprite(
+                img=img,
+                x=self.score_avatar.x + dx,
+                y=self.score_avatar.y + dx,
+                batch=batch,
+                recenter=False,
+            )
 
     def execute_bot_instructions(self, instructions: Optional[Instructions]):
         if instructions is None:
