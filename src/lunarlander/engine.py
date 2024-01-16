@@ -47,6 +47,8 @@ class Engine:
         fullscreen=False,
         manual=False,
         crater_scaling=1.0,
+        player_collisions=True,
+        asteroid_collisions=True,
     ):
         if seed is not None:
             np.random.seed(seed)
@@ -61,6 +63,8 @@ class Engine:
         self.time_of_last_scoreboard_update = 0
         self.time_of_last_asteroid = 0
         self._crater_scaling = crater_scaling
+        self._player_collisions = player_collisions
+        self._asteroid_collisions = asteroid_collisions
 
         self.game_map = Terrain()
         self.graphics = Graphics(game_map=self.game_map, fullscreen=fullscreen)
@@ -165,6 +169,7 @@ class Engine:
                     player.land(
                         time_left=config.time_limit - t,
                         landing_site_width=self.game_map.landing_sites[int(player.x)],
+                        flag=self.bots[player.team].flag,
                     )
 
     def compute_collisions(self):
@@ -212,11 +217,12 @@ class Engine:
             asteroid.move(dt=dt)
             tip = asteroid.tip()
             tip_size = asteroid.size * config.asteroid_tip_size
-            for player in self.players.values():
-                if not player.dead:
-                    d = np.sqrt((player.x - tip[0]) ** 2 + (player.y - tip[1]) ** 2)
-                    if d < tip_size:
-                        player.crash(reason="asteroid collision")
+            if self._asteroid_collisions:
+                for player in self.players.values():
+                    if not player.dead:
+                        d = np.sqrt((player.x - tip[0]) ** 2 + (player.y - tip[1]) ** 2)
+                        if d < tip_size:
+                            player.crash(reason="asteroid collision")
             if tip[1] <= self.game_map.terrain[int(tip[0])]:
                 self.game_map.make_crater(x=int(tip[0]), scaling=self._crater_scaling)
                 asteroid.avatar.delete()
@@ -244,7 +250,8 @@ class Engine:
         self.call_player_bots(t, dt)
         self.move_players(dt=dt)
         self.check_landing(t=t)
-        self.compute_collisions()
+        if self._player_collisions:
+            self.compute_collisions()
         self.update_asteroids(t, dt)
         self.graphics.update_stars(t)
 

@@ -17,8 +17,10 @@ for repo in glob.glob("*_bot"):
 start = None
 
 lunarlander.play(
-    bots=bots[1:],  # List of bots to use
-    manual=False,  # Set to True to play manually
-    crater_scaling=1.0,  # Artificially increase the size of craters
+    bots=bots,  # List of bots to use
+    manual=True,  # Set to True to play manually
+    crater_scaling=2.0,  # Artificially increase the size of craters
+    player_collisions=True,  # Set to False to disable collisions between players
+    asteroid_collisions=False,  # Set to False to disable being destroyed by asteroids
     test=False,
 )
