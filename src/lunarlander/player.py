@@ -279,7 +279,10 @@ class Player:
             + ", ".join([f"{k}={v:.1f}" for k, v in score_breakdown.items()])
         )
         if flag is not None:
-            img = Image.open(config.resources / "flags" / f"{flag}.png")
+            try:
+                img = Image.open(config.resources / "flags" / f"{flag}.png")
+            except FileNotFoundError:
+                img = Image.open(flag)
             width = int(config.avatar_size[0] / 1.5)
             height = int(width * (img.height / img.width))
             img = img.resize((width, height)).convert("RGBA")
@@ -340,10 +343,10 @@ class Player:
     def to_dict(self):
         return {
             "team": self.team,
-            "score": self.score,
             "position": (self.position[0], self.position[1]),
             "velocity": (self.velocity[0], self.velocity[1]),
             "heading": self.heading,
             "fuel": self.fuel,
             "dead": self.dead,
+            "landed": self.landed,
         }
