@@ -28,12 +28,12 @@ class PlayerInfo:
     """
 
     team: str
-    score: int
     position: Tuple[float, float]
     velocity: Tuple[float, float]
     heading: float
     fuel: float
     dead: bool
+    landed: bool
 
     def __getitem__(self, key):
         return getattr(self, key)
