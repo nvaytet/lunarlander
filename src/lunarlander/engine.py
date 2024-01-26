@@ -49,6 +49,7 @@ class Engine:
         crater_scaling=1.0,
         player_collisions=True,
         asteroid_collisions=True,
+        speedup=1.0,
     ):
         if seed is not None:
             np.random.seed(seed)
@@ -65,6 +66,7 @@ class Engine:
         self._crater_scaling = crater_scaling
         self._player_collisions = player_collisions
         self._asteroid_collisions = asteroid_collisions
+        self._speedup = speedup
 
         self.game_map = Terrain()
         self.graphics = Graphics(game_map=self.game_map, fullscreen=fullscreen)
@@ -173,7 +175,7 @@ class Engine:
                     player.land(
                         time_left=config.time_limit - t,
                         landing_site_width=self.game_map.landing_sites[int(player.x)],
-                        flag=getattr(self.bots[player.team], 'flag', None),
+                        flag=getattr(self.bots[player.team], "flag", None),
                     )
 
     def compute_collisions(self):
@@ -234,7 +236,7 @@ class Engine:
     def update(self, dt: float):
         if self.start_time is None:
             self.start_time = time.time()
-        t = time.time() - self.start_time
+        t = (time.time() - self.start_time) * self._speedup
 
         if self.exiting:
             if self.graphics.exit_message is None:
@@ -250,6 +252,7 @@ class Engine:
             self.graphics.update_scoreboard(t=config.time_limit - t)
             for player in [p for p in self.players.values() if not p.dead]:
                 player.update_scoreboard(batch=self.graphics.main_batch)
+        dt = dt * self._speedup
         self.call_player_bots(t, dt)
         self.move_players(dt=dt)
         self.check_landing(t=t)
