@@ -1,3 +1,5 @@
+<img src="https://images.fineartamerica.com/images/artworkimages/mediumlarge/3/grumman-lunar-module-artist-rendering-1965-aviation-history-archive.jpg" width="500">
+
 # lunarlander
 
 ## Get started with
