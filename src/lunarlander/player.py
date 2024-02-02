@@ -8,13 +8,7 @@ from matplotlib.colors import hex2color
 from PIL import Image
 
 from . import config
-from .tools import (
-    Instructions,
-    image_to_sprite,
-    recenter_image,
-    # string_to_color,
-    text_to_raw_image,
-)
+from .tools import Instructions, image_to_sprite, recenter_image, text_to_raw_image
 
 
 class Player:
@@ -140,11 +134,11 @@ class Player:
         self.right_flame.opacity = 0
 
     @property
-    def x(self):
+    def x(self) -> float:
         return self.avatar.x
 
     @x.setter
-    def x(self, value):
+    def x(self, value: float):
         self.avatar.x = value
         self.avatar_background.x = value
         self.main_flame.x = value
@@ -152,11 +146,11 @@ class Player:
         self.right_flame.x = value
 
     @property
-    def y(self):
+    def y(self) -> float:
         return self.avatar.y
 
     @y.setter
-    def y(self, value):
+    def y(self, value: float):
         self.avatar.y = value
         self.avatar_background.y = value
         self.main_flame.y = value
@@ -164,16 +158,16 @@ class Player:
         self.right_flame.y = value
 
     @property
-    def position(self):
+    def position(self) -> np.ndarray:
         return np.array([self.x, self.y])
 
     @property
-    def heading(self):
+    def heading(self) -> float:
         angle = -self.avatar.rotation
         return ((angle + 180) % 360) - 180
 
     @heading.setter
-    def heading(self, value):
+    def heading(self, value: float):
         value = (value + 360) % 360
         self.avatar.rotation = -value
         self.main_flame.rotation = -value
@@ -181,42 +175,42 @@ class Player:
         self.right_flame.rotation = -value
 
     @property
-    def main_thruster(self):
+    def main_thruster(self) -> bool:
         return self._main_thruster
 
     @main_thruster.setter
-    def main_thruster(self, value):
+    def main_thruster(self, value: bool):
         self._main_thruster = value
         self.main_flame.opacity = 255 * value
 
     @property
-    def left_thruster(self):
+    def left_thruster(self) -> bool:
         return self._left_thruster
 
     @left_thruster.setter
-    def left_thruster(self, value):
+    def left_thruster(self, value: bool):
         self._left_thruster = value
         self.left_flame.opacity = 255 * value
 
     @property
-    def right_thruster(self):
+    def right_thruster(self) -> bool:
         return self._right_thruster
 
     @right_thruster.setter
-    def right_thruster(self, value):
+    def right_thruster(self, value: bool):
         self._right_thruster = value
         self.right_flame.opacity = 255 * value
 
     @property
-    def flying(self):
+    def flying(self) -> bool:
         return (self.fuel > 0) and (not self.dead)
 
-    def get_thrust(self):
+    def get_thrust(self) -> np.ndarray:
         h = np.radians(self.heading + 90.0)
         vector = np.array([np.cos(h), np.sin(h)])
         return (config.thrust * self.main_thruster * (self.fuel > 0)) * vector
 
-    def move(self, dt):
+    def move(self, dt: float):
         acceleration = config.gravity + self.get_thrust()
         self.velocity += acceleration * dt
         self.x += self.velocity[0] * dt
@@ -234,7 +228,7 @@ class Player:
             if self.left_thruster or self.right_thruster:
                 self.fuel -= config.rotation_engine_burn_rate * dt
 
-    def crash(self, reason):
+    def crash(self, reason: str):
         self.dead = True
         # x, y = self.x, self.y
         img = Image.open(config.resources / "skull.png")
@@ -312,7 +306,7 @@ class Player:
         self.left_thruster = instructions.left and self.flying
         self.right_thruster = instructions.right and self.flying
 
-    def update_scoreboard(self, batch):
+    def update_scoreboard(self, batch: pyglet.graphics.Batch):
         img = Image.new("RGBA", (150, 54), (0, 0, 0, 0))
         texts = [
             f"Team {self.team}",
@@ -341,7 +335,7 @@ class Player:
             recenter=False,
         )
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
             "team": self.team,
             "position": (self.position[0], self.position[1]),

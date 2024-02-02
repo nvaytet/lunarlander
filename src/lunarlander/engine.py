@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import time
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +16,7 @@ from .terrain import Terrain
 from .tools import AsteroidInfo, Instructions, PlayerInfo
 
 
-def add_key_actions(window, player):
+def add_key_actions(window, player: Player):
     @window.event
     def on_key_press(symbol, modifiers):
         if symbol == pyglet.window.key.UP:
@@ -41,16 +42,16 @@ def add_key_actions(window, player):
 class Engine:
     def __init__(
         self,
-        bots,
-        safe=False,
-        test=True,
-        seed=None,
-        fullscreen=False,
-        manual=False,
-        crater_scaling=1.0,
-        player_collisions=True,
-        asteroid_collisions=True,
-        speedup=1.0,
+        bots: list,
+        safe: bool = False,
+        test: bool = True,
+        seed: Optional[int] = None,
+        fullscreen: bool = False,
+        manual: bool = False,
+        crater_scaling: float = 1.0,
+        player_collisions: bool = True,
+        asteroid_collisions: bool = True,
+        speedup: float = 1.0,
     ):
         if seed is not None:
             np.random.seed(seed)
@@ -117,7 +118,7 @@ class Engine:
     def active_players(self):
         return (p for p in self.players.values() if (not p.dead) and (not p.landed))
 
-    def generate_info(self, t, dt):
+    def generate_info(self, t: float, dt: float) -> dict:
         info = {"t": t, "dt": dt, "terrain": self.game_map.terrain}
         info["players"] = {
             team: PlayerInfo(**p.to_dict()) for team, p in self.players.items()
@@ -212,7 +213,7 @@ class Engine:
                 x2 - x1
             ) ** 2 * (x2 - x1)
 
-    def update_asteroids(self, t, dt):
+    def update_asteroids(self, t: float, dt: float):
         delay = (
             1.0 - config.asteroid_delay
         ) / config.time_limit * t + config.asteroid_delay

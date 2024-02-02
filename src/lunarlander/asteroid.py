@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import uuid
+from typing import Tuple
 
 import numpy as np
 import pyglet
@@ -25,7 +26,7 @@ class Asteroid:
         self.heading = heading
         self.make_avatar(x, y, batch)
 
-    def make_avatar(self, x, y, batch):
+    def make_avatar(self, x: float, y: float, batch: pyglet.graphics.Batch):
         img = pyglet.image.load(config.resources / "asteroid.png")
         self.avatar = pyglet.sprite.Sprite(
             img=recenter_image(img),
@@ -38,39 +39,39 @@ class Asteroid:
         self.avatar.rotation = -self.heading
 
     @property
-    def x(self):
+    def x(self) -> float:
         return self.avatar.x
 
     @x.setter
-    def x(self, value):
+    def x(self, value: float):
         self.avatar.x = value
 
     @property
-    def y(self):
+    def y(self) -> float:
         return self.avatar.y
 
     @y.setter
-    def y(self, value):
+    def y(self, value: float):
         self.avatar.y = value
 
-    def velocity_vector(self):
+    def velocity_vector(self) -> Tuple[float, float]:
         return (
             self.v * np.cos(np.radians(self.heading)),
             self.v * np.sin(np.radians(self.heading)),
         )
 
-    def move(self, dt):
+    def move(self, dt: float):
         vx, vy = self.velocity_vector()
         self.x += vx * dt
         self.y += vy * dt
         self.x = self.x % config.nx
 
-    def tip(self):
+    def tip(self) -> Tuple[float, float]:
         tipx = self.x + self.size * np.cos(np.radians(self.heading)) / 2
         tipy = self.y + self.size * np.sin(np.radians(self.heading)) / 2
         return tipx % config.nx, tipy
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         x, y = self.tip()
         return {
             "id": self.id,

@@ -1,12 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import hashlib
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 
-import numpy as np
 import pyglet
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 from . import config
 
@@ -36,7 +34,7 @@ class PlayerInfo:
     dead: bool
     landed: bool
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Any:
         return getattr(self, key)
 
 
@@ -52,11 +50,13 @@ class AsteroidInfo:
     heading: float
     size: float
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Any:
         return getattr(self, key)
 
 
-def text_to_raw_image(text, width, height, font=None):
+def text_to_raw_image(
+    text: str, width: float, height: float, font: Optional[ImageFont.ImageFont] = None
+) -> Image:
     if font is None:
         font = config.large_font
     img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
@@ -70,7 +70,9 @@ def text_to_raw_image(text, width, height, font=None):
     return img
 
 
-def text_to_image(text, width, height, font=None):
+def text_to_image(
+    text: str, width: float, height: float, font: Optional[ImageFont.ImageFont] = None
+) -> pyglet.image.ImageData:
     img = text_to_raw_image(text, width, height, font=font)
     return pyglet.image.ImageData(
         width=img.width,

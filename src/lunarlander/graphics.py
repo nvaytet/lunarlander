@@ -6,11 +6,12 @@ import numpy as np
 import pyglet
 
 from . import config
+from .terrain import Terrain
 from .tools import text_to_image
 
 
 class Graphics:
-    def __init__(self, game_map, fullscreen: bool = False):
+    def __init__(self, game_map: Terrain, fullscreen: bool = False):
         self.window = pyglet.window.Window(
             config.nx + config.scoreboard_width,
             config.ny,
@@ -55,7 +56,7 @@ class Graphics:
                 )
             )
 
-    def update_stars(self, t):
+    def update_stars(self, t: float):
         for star, t0 in zip(self.stars, self.star_t0):
             star.opacity = int(
                 255
