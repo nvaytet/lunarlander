@@ -12,7 +12,7 @@ from .tools import (
     Instructions,
     image_to_sprite,
     recenter_image,
-    string_to_color,
+    # string_to_color,
     text_to_raw_image,
 )
 
@@ -22,6 +22,7 @@ class Player:
         self,
         number: int,
         team: str,
+        color: str,
         avatar: Union[int, str],
         position: float,
         back_batch: pyglet.graphics.Batch,
@@ -39,7 +40,7 @@ class Player:
 
         self._rotate_left = False
         self._rotate_right = False
-        self.color = string_to_color(team)
+        self.color = color
         self.make_avatar(
             avatar=avatar,
             position=position,
@@ -76,9 +77,9 @@ class Player:
             img = img.resize(config.avatar_size).convert("RGBA")
             data = img.getdata()
             array = np.array(data).reshape(img.height, img.width, 4)
-            rgb = hex2color(self.color)
+            # rgb = hex2color(self.color)
             for i in range(3):
-                array[..., i] = int(round(rgb[i] * 255))
+                array[..., i] = int(round(self.color[i] * 255))
             img = Image.fromarray(array.astype(np.uint8))
         self.avatar = image_to_sprite(
             img=img,

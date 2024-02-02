@@ -2,6 +2,7 @@
 
 import time
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pyglet
 
@@ -71,6 +72,12 @@ class Engine:
         self.game_map = Terrain()
         self.graphics = Graphics(game_map=self.game_map, fullscreen=fullscreen)
 
+        colors = []
+        cmap = plt.get_cmap("gist_ncar")
+        nplayers = len(bots) + 1
+        for i in range(nplayers):
+            colors.append(cmap(i / (nplayers - 1)))
+
         self.bots = {bot.team: bot for bot in bots}
         starting_positions = self.make_starting_positions(nplayers=len(self.bots))
         self.players = {}
@@ -79,6 +86,7 @@ class Engine:
             self.players[team] = Player(
                 team=team,
                 number=i,
+                color=colors[i + 1],
                 position=pos,
                 avatar=getattr(bot, "avatar", 0),
                 back_batch=self.graphics.background_batch,
@@ -98,7 +106,8 @@ class Engine:
     def make_starting_positions(self, nplayers: int) -> list:
         random_origin = np.random.uniform(0, config.nx)
         step = config.nx / nplayers
-        return [int(random_origin + i * step) % config.nx for i in range(nplayers)]
+        choices = [int(random_origin + i * step) % config.nx for i in range(nplayers)]
+        return np.random.permutation(choices)
 
     def exit(self, message: str):
         self.exiting = True

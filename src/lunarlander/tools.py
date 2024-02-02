@@ -4,6 +4,7 @@ import hashlib
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
+import numpy as np
 import pyglet
 from PIL import Image, ImageDraw
 
@@ -78,12 +79,6 @@ def text_to_image(text, width, height, font=None):
         data=img.tobytes(),
         pitch=-img.width * 4,
     )
-
-
-def string_to_color(input_string: str) -> str:
-    hash_object = hashlib.md5(input_string.encode())
-    hex_hash = hash_object.hexdigest()
-    return "#" + hex_hash[:6]
 
 
 def recenter_image(img: pyglet.image.ImageData) -> pyglet.image.ImageData:
