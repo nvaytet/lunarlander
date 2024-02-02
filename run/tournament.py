@@ -3,17 +3,20 @@
 import glob
 import importlib
 
-import supremacy
+import lunarlander
 
-players = {}
-for repo in glob.glob("*_ai.py"):
-    ai = importlib.import_module(f"{repo.removesuffix('.py')}")
-    players[ai.CREATOR] = ai
+bots = []
+for repo in glob.glob("*_bot"):
+    module = importlib.import_module(f"{repo}")
+    bots.append(module.Bot())
 
-supremacy.start(
-    players=players,
-    test=False,
-    safe=True,
-    time_limit=8 * 60,
-    fullscreen=True,
+lunarlander.play(
+    bots=bots,  # List of bots to use
+    manual=False,  # Set to True to play manually using the keyboard arrow keys
+    crater_scaling=1.0,  # Artificially increase the size of craters
+    player_collisions=True,  # Set to False to disable collisions between players
+    asteroid_collisions=True,  # Set to False to disable being destroyed by asteroids
+    speedup=1.0,  # Increase to speed up the game (no guarantees this works very well)
+    fullscreen=True,  # Set to True to play in fullscreen mode
+    test=False,  # Set to True to run in test mode
 )
