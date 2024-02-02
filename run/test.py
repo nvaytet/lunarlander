@@ -10,14 +10,6 @@ for repo in glob.glob("*_bot"):
     module = importlib.import_module(f"{repo}")
     bots.append(module.Bot())
 
-extras = ["Andrew", "Janice", "Katie", "David", "Jenny", "Martin"]
-
-for i, name in enumerate(extras):
-    extra_bot = module.Bot()
-    extra_bot.team = name
-    extra_bot.avatar = i + 1
-    bots.append(extra_bot)
-
 lunarlander.play(
     bots=bots,  # List of bots to use
     manual=True,  # Set to True to play manually using the keyboard arrow keys
