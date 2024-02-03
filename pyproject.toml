@@ -30,4 +30,4 @@ dependencies = [
 where = ["./src"]
 
 [tool.setuptools.package-data]
-supremacy = ["resources/*.png"]
+lunarlander = ["resources/*.png"]
